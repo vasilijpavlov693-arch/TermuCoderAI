@@ -1,11 +1,27 @@
 import requests
 import json
 
+from termucoder.config import load_config
+
 
 class LLMClient:
 
-    def __init__(self, url="http://127.0.0.1:8080"):
-        self.url = url
+    def __init__(self):
+
+        config = load_config()
+
+        host = config["server"]["host"]
+        port = config["server"]["port"]
+
+        self.url = f"http://{host}:{port}"
+
+        self.temperature = (
+            config["generation"]["temperature"]
+        )
+
+        self.max_tokens = (
+            config["generation"]["max_tokens"]
+        )
 
 
     def ask(self, prompt):
@@ -14,46 +30,91 @@ class LLMClient:
             "messages": [
                 {
                     "role": "system",
-                    "content": "Ты кодовый помощник. Выполняй запрос буквально. Если пользователь просит написать код — выводи только код без объяснений, комментариев и текста вокруг."
+                    "content": (
+                        "Ты AI помощник программиста. "
+                        "Отвечай точно на запрос. "
+                        "Если пользователь просит код — "
+                        "выводи только код."
+                    )
                 },
                 {
                     "role": "user",
                     "content": prompt
                 }
             ],
-            "temperature": 0.2,
-            "max_tokens": 192,
+
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
             "stream": True
         }
 
 
-        with requests.post(
-            self.url + "/v1/chat/completions",
-            json=payload,
-            stream=True
-        ) as r:
+        result = ""
 
-            r.encoding = "utf-8"
 
-            for line in r.iter_lines(decode_unicode=True):
+        try:
 
-                if not line:
-                    continue
+            with requests.post(
+                self.url + "/v1/chat/completions",
+                json=payload,
+                stream=True,
+                timeout=300
+            ) as r:
 
-                if line.startswith("data: "):
 
-                    data=line[6:]
+                r.encoding = "utf-8"
 
-                    if data == "[DONE]":
-                        break
 
-                    try:
-                        obj=json.loads(data)
+                for line in r.iter_lines(
+                    decode_unicode=True
+                ):
 
-                        text=obj["choices"][0]["delta"].get("content","")
 
-                        if text:
-                            print(text, end="", flush=True)
+                    if not line:
+                        continue
 
-                    except:
-                        pass
+
+                    if line.startswith("data: "):
+
+                        data = line[6:]
+
+
+                        if data == "[DONE]":
+                            break
+
+
+                        try:
+
+                            obj = json.loads(data)
+
+
+                            text = (
+                                obj["choices"][0]
+                                ["delta"]
+                                .get("content", "")
+                            )
+
+
+                            if text:
+
+                                print(
+                                    text,
+                                    end="",
+                                    flush=True
+                                )
+
+                                result += text
+
+
+                        except json.JSONDecodeError:
+                            pass
+
+
+        except requests.exceptions.ConnectionError:
+
+            print(
+                "\n❌ AI сервер недоступен"
+            )
+
+
+        return result
