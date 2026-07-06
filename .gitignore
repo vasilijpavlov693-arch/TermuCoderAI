@@ -1,17 +1,38 @@
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
+
+# Tests
 .pytest_cache/
+.coverage
+
+# Virtual environments
 .venv/
 venv/
 
+# TermuCoder data
 cache/
 history/
 
-.cursor/
+# AI models
+AI/
+models/
 
-*.patch
-*.diff
+# IDE
+.cursor/
+.vscode/
+
+# Environment
+.env
+
+# Logs
 *.log
 
-.env
+# Patches
+*.patch
+*.diff
+
+# OS files
+.DS_Store
+Thumbs.db
