@@ -13,6 +13,8 @@ from termucoder.server import (
 )
 
 from termucoder.doctor import doctor
+from termucoder.setup import setup
+from termucoder.version import show_version
 
 from termucoder.model import (
     list_models,
@@ -253,6 +255,20 @@ def main():
         server_command(
             sys.argv[2:]
         )
+
+        return
+
+
+    if command == "version":
+
+        show_version()
+
+        return
+
+
+    if command == "setup":
+
+        setup("--full" in sys.argv[2:], "--start" in sys.argv[2:])
 
         return
 
