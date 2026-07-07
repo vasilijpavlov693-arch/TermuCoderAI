@@ -1,11 +1,15 @@
 """Тесты для termucoder.api (с моком LLM-сервера)."""
 
+import importlib.util
 import io
 import json
 import unittest
 from unittest import mock
 
 from termucoder.api import LLMClient
+
+
+_HAS_REQUESTS = importlib.util.find_spec("requests") is not None
 
 
 def _sse(lines):
@@ -38,6 +42,7 @@ class _Resp:
             yield ln
 
 
+@unittest.skipUnless(_HAS_REQUESTS, "требуется пакет requests")
 class TestAPI(unittest.TestCase):
 
     def _patch(self, lines):

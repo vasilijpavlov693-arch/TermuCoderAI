@@ -32,19 +32,19 @@ def _paint(code: str, text: str) -> str:
 
 
 def ok(text: str) -> str:
-    return _paint(GREEN, "✓ " + text)
+    return _paint(GREEN, "[OK] " + text)
 
 
 def error(text: str) -> str:
-    return _paint(RED, "✗ " + text)
+    return _paint(RED, "[ERR] " + text)
 
 
 def warning(text: str) -> str:
-    return _paint(YELLOW, "⚠ " + text)
+    return _paint(YELLOW, "[!] " + text)
 
 
 def note(text: str) -> str:
-    return _paint(BLUE, "ℹ " + text)
+    return _paint(BLUE, "[i] " + text)
 
 
 def header(text: str) -> str:

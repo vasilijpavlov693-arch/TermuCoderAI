@@ -57,7 +57,7 @@ def scan_project(root: str = ".", extra_ignore=None) -> "list[str]":
             if is_ignored(rel, patterns):
                 continue
 
-            results.append(rel)
+            results.append(rel.replace(os.sep, "/"))
 
     return sorted(results)
 

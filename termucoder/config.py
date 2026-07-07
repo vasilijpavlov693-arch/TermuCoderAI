@@ -74,11 +74,11 @@ def save_config(config):
 def init_config():
     """Создаёт settings.json, если он ещё не существует."""
     if os.path.exists(CONFIG_FILE):
-        print("⚠ settings.json уже существует")
+        print("[!] settings.json уже существует")
         return
 
     save_config(DEFAULT_CONFIG)
-    print("✅ settings.json создан")
+    print("[OK] settings.json создан")
 
 
 def _coerce(value: str):

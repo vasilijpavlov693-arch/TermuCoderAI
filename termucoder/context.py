@@ -33,7 +33,7 @@ def build_structure(root: str, files: "list[str]") -> str:
 
     for f in files:
         node = tree
-        for part in f.split(os.sep):
+        for part in f.split("/"):
             node = node.setdefault(part, {})
 
     lines: "list[str]" = []
@@ -59,7 +59,7 @@ def read_docs(root: str, files: "list[str]") -> str:
     for f in files:
         base = os.path.basename(f).lower()
 
-        in_docs_dir = f.lower().startswith("docs" + os.sep)
+        in_docs_dir = f.lower().startswith("docs/")
 
         if base not in DOC_NAMES and not in_docs_dir:
             continue
