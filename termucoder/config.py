@@ -47,6 +47,19 @@ DEFAULT_CONFIG = {
 }
 
 
+def _deep_merge(base: dict, override: dict) -> dict:
+    """Рекурсивно сливает override в копию base (сохраняя вложенные дефолты)."""
+    result = dict(base)
+
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(result.get(key), dict):
+            result[key] = _deep_merge(result[key], value)
+        else:
+            result[key] = value
+
+    return result
+
+
 def load_config():
     """Загружает конфигурацию. Если файла нет — возвращает значения по умолчанию."""
     if not os.path.exists(CONFIG_FILE):
@@ -57,12 +70,11 @@ def load_config():
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
     except (json.JSONDecodeError, OSError):
-        return DEFAULT_CONFIG
+        # Копия, а не глобальный объект, чтобы мутации не портили умолчания.
+        return copy.deepcopy(DEFAULT_CONFIG)
 
-    # Дополняем отсутствующие секции значениями по умолчанию.
-    merged = dict(DEFAULT_CONFIG)
-    merged.update(data)
-    return merged
+    # Глубокое слияние: сохраняем вложенные дефолты для частичных settings.json.
+    return _deep_merge(DEFAULT_CONFIG, data)
 
 
 def save_config(config):
@@ -88,7 +100,7 @@ def _coerce(value: str):
     if low in ("true", "false"):
         return low == "true"
 
-    if low in ("none", "null", ""):
+    if low in ("none", "null"):
         return None
 
     try:

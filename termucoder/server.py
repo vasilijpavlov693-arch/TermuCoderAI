@@ -4,25 +4,10 @@ import signal
 import json
 import time
 
+from termucoder.config import load_config, CONFIG_FILE
 
-CONFIG_FILE = "settings.json"
 PID_FILE = ".termucoder_server.pid"
 LOG_FILE = "llama-server.log"
-
-
-def load_config():
-
-    if not os.path.exists(CONFIG_FILE):
-        return {}
-
-    with open(
-        CONFIG_FILE,
-        "r",
-        encoding="utf-8"
-    ) as f:
-
-        return json.load(f)
-
 
 
 def get_command():

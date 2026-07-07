@@ -7,6 +7,7 @@
   - итоговый промпт для передачи модели.
 """
 
+import functools
 import os
 
 from termucoder.search import scan_project, count_by_ext
@@ -73,18 +74,25 @@ def read_docs(root: str, files: "list[str]") -> str:
     return "\n\n".join(blocks)
 
 
-def analyze_project(root: str = ".", max_file_chars: int = 4000) -> dict:
+@functools.lru_cache(maxsize=32)
+def analyze_project(root: str = ".", max_file_chars: int = 4000, max_files: int = 20) -> dict:
     """Анализирует проект и возвращает словарь с контекстом.
 
     Ключи: files, structure, docs, contents, stats.
+    ``max_files`` ограничивает число загружаемых файлов содержимого, чтобы
+    не переполнять память/контекст модели на крупных проектах.
     """
     files = scan_project(root)
     structure = build_structure(root, files)
     docs = read_docs(root, files)
 
     contents: "dict[str, str]" = {}
+    loaded = 0
 
     for f in files:
+        if loaded >= max_files:
+            break
+
         ext = os.path.splitext(f)[1].lower()
 
         if ext not in TEXT_EXT:
@@ -100,6 +108,7 @@ def analyze_project(root: str = ".", max_file_chars: int = 4000) -> dict:
             data = data[:max_file_chars] + "\n... (обрезано)"
 
         contents[f] = data
+        loaded += 1
 
     return {
         "files": files,

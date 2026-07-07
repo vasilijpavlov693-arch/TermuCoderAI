@@ -1,40 +1,12 @@
 import os
 import json
 
+from termucoder.config import load_config, save_config, CONFIG_FILE
 
-CONFIG_FILE = "settings.json"
+
 MODELS_DIR = os.path.expanduser(
     "~/AI/models"
 )
-
-
-
-def load_config():
-
-    with open(
-        CONFIG_FILE,
-        "r",
-        encoding="utf-8"
-    ) as f:
-
-        return json.load(f)
-
-
-
-def save_config(cfg):
-
-    with open(
-        CONFIG_FILE,
-        "w",
-        encoding="utf-8"
-    ) as f:
-
-        json.dump(
-            cfg,
-            f,
-            indent=4,
-            ensure_ascii=False
-        )
 
 
 

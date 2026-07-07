@@ -12,12 +12,18 @@ import time
 HISTORY_DIR = "history"
 SESSION_EXT = ".json"
 
+# Допустимые символы в id сессии (исключаем "/", "\\", ".." и пр.).
+_ALLOWED = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-")
 
-def _ensure_dir():
-    os.makedirs(HISTORY_DIR, exist_ok=True)
+
+def _validate(session_id: str) -> None:
+    if not session_id or not all(c in _ALLOWED for c in session_id):
+        raise ValueError(f"Недопустимый id сессии: {session_id!r}")
 
 
 def session_path(session_id: str) -> str:
+    """Возвращает путь к файлу сессии. Выбрасывает ValueError при невалидном id."""
+    _validate(session_id)
     return os.path.join(HISTORY_DIR, session_id + SESSION_EXT)
 
 
@@ -28,9 +34,14 @@ def new_session_id() -> str:
 
 def save_session(session_id: str, messages: list) -> None:
     """Сохраняет список сообщений сессии в файл."""
+    try:
+        path = session_path(session_id)
+    except ValueError:
+        return
+
     _ensure_dir()
 
-    with open(session_path(session_id), "w", encoding="utf-8") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(
             {"id": session_id, "messages": messages},
             f,
@@ -40,14 +51,20 @@ def save_session(session_id: str, messages: list) -> None:
 
 
 def load_session(session_id: str) -> list:
-    """Загружает сообщения сессии. Если сессии нет — возвращает []."""
-    path = session_path(session_id)
+    """Загружает сообщения сессии. Возвращает [] при ошибках/отсутствии файла."""
+    try:
+        path = session_path(session_id)
+    except ValueError:
+        return []
 
     if not os.path.exists(path):
         return []
 
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f).get("messages", [])
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f).get("messages", [])
+    except (json.JSONDecodeError, OSError):
+        return []
 
 
 def list_sessions() -> "list[str]":
@@ -72,10 +89,17 @@ def latest_session():
 
 def delete_session(session_id: str) -> bool:
     """Удаляет сессию. Возвращает True, если файл был удалён."""
-    path = session_path(session_id)
+    try:
+        path = session_path(session_id)
+    except ValueError:
+        return False
 
     if os.path.exists(path):
         os.remove(path)
         return True
 
     return False
+
+
+def _ensure_dir():
+    os.makedirs(HISTORY_DIR, exist_ok=True)

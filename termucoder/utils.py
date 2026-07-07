@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import functools
 import os
 import sys
 
@@ -64,9 +65,15 @@ def read_gitignore(root: str = ".") -> "set[str]":
 
     Возвращает множество паттернов (без комментариев и пустых строк).
     Если файла нет — возвращает пустое множество.
+    Кэш ключей по абсолютному пути (корректно при смене cwd).
     """
+    return _read_gitignore_cached(os.path.abspath(root))
+
+
+@functools.lru_cache(maxsize=32)
+def _read_gitignore_cached(root_abs: str) -> "set[str]":
     patterns: "set[str]" = set()
-    path = os.path.join(root, ".gitignore")
+    path = os.path.join(root_abs, ".gitignore")
 
     if not os.path.isfile(path):
         return patterns
@@ -118,6 +125,14 @@ def is_ignored(rel_path: str, patterns: "set[str]") -> bool:
 
         if pat.startswith("*"):
             suffix = pat[1:]
+
+            # Паттерн ".*" — скрытые файлы (любой компонент пути начинается с ".").
+            if suffix == ".":
+                if rel.startswith(".") or any(
+                    p.startswith(".") for p in parts
+                ):
+                    return True
+                continue
 
             if rel.endswith(suffix) or any(
                 p.endswith(suffix) for p in parts

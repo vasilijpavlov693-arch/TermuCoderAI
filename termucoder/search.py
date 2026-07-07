@@ -4,6 +4,7 @@
 игнорируемые папки (например .git, __pycache__, node_modules).
 """
 
+import functools
 import os
 
 from termucoder.utils import read_gitignore, is_ignored

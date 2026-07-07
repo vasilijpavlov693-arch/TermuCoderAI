@@ -165,27 +165,6 @@ def chat_command(args):
     """Интерактивный чат с моделью (v0.3)."""
     flags = set(args)
 
-    if "--list" in flags:
-        sessions = history_mod.list_sessions()
-        if not sessions:
-            print(note("Нет сохранённых сессий"))
-            return
-        print(header("Сохранённые сессии:"))
-        for s in sessions:
-            print(f"  - {s}")
-        return
-
-    if "--delete" in flags:
-        rest = [a for a in args if a != "--delete"]
-        if not rest:
-            print(error("Укажи id сессии: termucoder chat --delete <id>"))
-            return
-        if history_mod.delete_session(rest[0]):
-            print(ok(f"Сессия удалена: {rest[0]}"))
-        else:
-            print(error("Сессия не найдена"))
-        return
-
     if "--new" in flags:
         session_id = history_mod.new_session_id()
         messages = []
@@ -198,6 +177,25 @@ def chat_command(args):
         session_id = args[idx + 1]
         messages = history_mod.load_session(session_id)
         print(ok(f"Продолжаем сессию: {session_id} ({len(messages)} сообщений)"))
+    elif "--delete" in flags:
+        rest = [a for a in args if a != "--delete"]
+        if not rest:
+            print(error("Укажи id сессии: termucoder chat --delete <id>"))
+            return
+        if history_mod.delete_session(rest[0]):
+            print(ok(f"Сессия удалена: {rest[0]}"))
+        else:
+            print(error("Сессия не найдена"))
+        return
+    elif "--list" in flags:
+        sessions = history_mod.list_sessions()
+        if not sessions:
+            print(note("Нет сохранённых сессий"))
+            return
+        print(header("Сохранённые сессии:"))
+        for s in sessions:
+            print(f"  - {s}")
+        return
     else:
         session_id = history_mod.latest_session() or history_mod.new_session_id()
         messages = history_mod.load_session(session_id)
@@ -225,7 +223,7 @@ def chat_command(args):
             if not line:
                 continue
 
-            if line in ("/exit", "/quit", "exit", "quit"):
+            if line in ("/exit", "/quit"):
                 break
 
             if line == "/clear":

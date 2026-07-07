@@ -4,9 +4,14 @@ import subprocess
 import importlib.util
 
 from termucoder.server import start_server, status_server
+from termucoder.config import (
+    load_config,
+    save_config,
+    init_config,
+    DEFAULT_CONFIG,
+    CONFIG_FILE,
+)
 
-
-CONFIG_FILE = "settings.json"
 
 MODELS_DIR = os.path.expanduser(
     "~/AI/models"
@@ -20,69 +25,6 @@ LLAMA_SERVER = os.path.join(
     LLAMA_DIR,
     "build/bin/llama-server"
 )
-
-
-def load_config():
-
-    if not os.path.exists(CONFIG_FILE):
-
-        return {}
-
-
-    with open(
-        CONFIG_FILE,
-        "r",
-        encoding="utf-8"
-    ) as f:
-
-        return json.load(f)
-
-
-
-def save_config(cfg):
-
-    with open(
-        CONFIG_FILE,
-        "w",
-        encoding="utf-8"
-    ) as f:
-
-        json.dump(
-            cfg,
-            f,
-            indent=4,
-            ensure_ascii=False
-        )
-
-
-
-DEFAULT_CONFIG = {
-
-    "server": {
-        "host": "127.0.0.1",
-        "port": 8080,
-        "context": 4096,
-        "threads": 4,
-        "gpu_layers": 0,
-        "parallel": 1
-    },
-
-    "model": {
-        "name": "",
-        "path": ""
-    },
-
-    "generation": {
-        "temperature": 0.2,
-        "max_tokens": 192
-    },
-
-    "prompts": {
-        "system":
-        "Ты AI помощник программиста."
-    }
-}
-
 
 
 def create_dirs():

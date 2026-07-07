@@ -3,9 +3,7 @@ import json
 import subprocess
 import urllib.request
 
-
-CONFIG_FILE = "settings.json"
-
+from termucoder.config import load_config, CONFIG_FILE
 
 def check_settings():
 
@@ -18,22 +16,6 @@ def check_settings():
     print("✗ settings.json отсутствует")
 
     return False
-
-
-
-def load_config():
-
-    if not os.path.exists(CONFIG_FILE):
-
-        return {}
-
-    with open(
-        CONFIG_FILE,
-        "r",
-        encoding="utf-8"
-    ) as f:
-
-        return json.load(f)
 
 
 
