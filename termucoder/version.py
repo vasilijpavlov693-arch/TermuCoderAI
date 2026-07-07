@@ -1,45 +1,33 @@
+"""Работа с номером версии TermuCoderAI."""
+
 import os
 
 
 VERSION_FILE = "VERSION"
 
 
-def get_version():
-
+def get_version() -> str:
+    """Возвращает версию из файла VERSION или 'unknown'."""
     if not os.path.exists(VERSION_FILE):
-
         return "unknown"
 
-
-    with open(
-        VERSION_FILE,
-        "r"
-    ) as f:
-
+    with open(VERSION_FILE, "r", encoding="utf-8") as f:
         return f.read().strip()
 
 
+# Список реализованных возможностей (для вывода в --version и doctor).
+FEATURES = [
+    "llama-server manager",
+    "model manager",
+    "doctor (диагностика)",
+    "setup (настройка)",
+    "config (настройки)",
+]
+
 
 def show_version():
-
-    print(
-        f"TermuCoderAI {get_version()}"
-    )
-
+    print(f"TermuCoderAI {get_version()}")
     print()
 
-    print(
-        "✓ llama-server manager"
-    )
-
-    print(
-        "✓ model manager"
-    )
-
-    print(
-        "✓ doctor"
-    )
-
-    print(
-        "✓ setup"
-    )
+    for feature in FEATURES:
+        print(f"  ✓ {feature}")
