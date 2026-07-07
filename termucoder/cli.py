@@ -1,12 +1,23 @@
-"""CLI интерфейс TermuCoderAI (v0.3 — Интерактивный режим).
+"""CLI интерфейс TermuCoderAI.
 
-Поддерживает команды: ask, config, server, model, setup, doctor, chat,
-а также флаги --version / --help.
+Единая точка входа. Поддерживает команды: ask, config, server, model, setup,
+doctor, version, chat, analyze, а также флаги --version / --help.
+
+Примеры:
+    termucoder --version
+    termucoder --help
+    termucoder ask "объясни этот код"
+    termucoder config show
+    termucoder config set generation.temperature 0.4
+    termucoder doctor
+    termucoder chat
+    termucoder analyze .
 """
 
 import sys
 
 from termucoder import history as history_mod
+from termucoder import context as context_mod
 from termucoder.api import LLMClient
 from termucoder.config import (
     load_config,
@@ -232,6 +243,38 @@ def chat_command(args):
         print(muted(f"Сессия сохранена: {session_id}"))
 
 
+def analyze_command(args):
+    """Анализ проекта (v0.4)."""
+    flags = set(args)
+    rest = [a for a in args if not a.startswith("--")]
+
+    path = rest[0] if rest else "."
+
+    if "--json" in flags:
+        import json as _json
+        info = context_mod.analyze_project(path)
+        info.pop("contents", None)
+        print(_json.dumps(info, ensure_ascii=False, indent=2))
+        return
+
+    if "--ask" in flags:
+        idx = args.index("--ask")
+        question = " ".join(args[idx + 1:]) if idx + 1 < len(args) else ""
+        if not question:
+            print(error("Укажи вопрос: termucoder analyze . --ask \"... \""))
+            return
+        print(header(f"📂 Анализ проекта: {path}"))
+        context_text = context_mod.build_prompt(path)
+        client = LLMClient()
+        client.ask_context(context_text, question)
+        print()
+        return
+
+    print(header(f"📂 Анализ проекта: {path}"))
+    print()
+    print(context_mod.summarize(path))
+
+
 def ask_command(args):
     """Одиночный вопрос модели."""
     prompt = " ".join(args)
@@ -257,6 +300,7 @@ COMMANDS_HELP = [
     ("model <команда>",       "Управление моделями (list/info/use)"),
     ("setup [--full]",         "Настройка окружения"),
     ("doctor",                 "Диагностика системы"),
+    ("analyze <путь>",         "Анализ проекта (--ask, --json)"),
     ("--version, -v",          "Показать версию"),
     ("--help, -h",             "Показать эту справку"),
 ]
@@ -275,7 +319,7 @@ def print_help():
     print("  termucoder ask \"объясни этот код\"")
     print("  termucoder chat")
     print("  termucoder config set generation.temperature 0.4")
-    print("  termucoder doctor")
+    print("  termucoder analyze . --ask \"что делает этот проект?\"")
 
 
 # ---------------------------------------------------------------------------
@@ -305,6 +349,7 @@ def main():
         "model": model_command,
         "setup": lambda a: setup("--full" in a, "--start" in a),
         "doctor": lambda a: doctor(),
+        "analyze": analyze_command,
     }
 
     handler = handlers.get(command)

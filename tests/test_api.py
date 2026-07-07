@@ -47,6 +47,7 @@ class TestAPI(unittest.TestCase):
     def test_ask(self):
         client = LLMClient()
         with self._patch(_sse(["При", "вет"])), io.StringIO() as buf:
+            # Перехватываем stdout, чтобы не засорять вывод.
             with mock.patch("sys.stdout", buf):
                 result = client.ask("привет")
         self.assertEqual(result, "Привет")
@@ -61,6 +62,13 @@ class TestAPI(unittest.TestCase):
             with mock.patch("sys.stdout", buf):
                 result = client.chat(history)
         self.assertEqual(result, "ок")
+
+    def test_ask_context(self):
+        client = LLMClient()
+        with self._patch(_sse(["анализ"])), io.StringIO() as buf:
+            with mock.patch("sys.stdout", buf):
+                result = client.ask_context("контекст", "вопрос")
+        self.assertEqual(result, "анализ")
 
 
 if __name__ == "__main__":

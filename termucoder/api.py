@@ -1,8 +1,8 @@
 """Клиент LLM API для TermuCoderAI.
 
 Обёртка над llama-server (совместимый с OpenAI API эндпоинт
-``/v1/chat/completions``). Поддерживает потоковую генерацию и диалог с
-историей сообщений.
+``/v1/chat/completions``). Поддерживает потоковую генерацию, диалог с
+историей сообщений и отправку контекста проекта.
 """
 
 import json
@@ -30,6 +30,9 @@ class LLMClient:
     # Внутренние хелперы
     # ------------------------------------------------------------------
 
+    def _endpoint(self) -> str:
+        return self.url + "/v1/chat/completions"
+
     def _stream(self, messages, temperature=None, max_tokens=None):
         """Отправляет запрос и потоково выводит ответ. Возвращает весь текст."""
         payload = {
@@ -43,7 +46,7 @@ class LLMClient:
 
         try:
             with requests.post(
-                self.url + "/v1/chat/completions",
+                self._endpoint(),
                 json=payload,
                 stream=True,
                 timeout=300
@@ -104,6 +107,23 @@ class LLMClient:
         """
         messages = [{"role": "system", "content": self.system_prompt}]
         messages.extend(history)
+
+        print()
+        return self._stream(messages)
+
+    def ask_context(self, context: str, question: str) -> str:
+        """Отправляет вопрос вместе с контекстом проекта."""
+        user_content = (
+            "Вот информация о проекте:\n\n"
+            f"{context}\n\n"
+            "--- КОНЕЦ КОНТЕКСТА ---\n\n"
+            f"Вопрос: {question}"
+        )
+
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": user_content}
+        ]
 
         print()
         return self._stream(messages)
