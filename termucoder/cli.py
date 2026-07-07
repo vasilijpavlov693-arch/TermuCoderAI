@@ -1,19 +1,12 @@
-"""CLI интерфейс TermuCoderAI (v0.2 — Стабильное ядро).
+"""CLI интерфейс TermuCoderAI (v0.3 — Интерактивный режим).
 
-Единая точка входа. Поддерживает команды: ask, config, server, model, setup,
-doctor, а также флаги --version / --help.
-
-Примеры:
-    termucoder --version
-    termucoder --help
-    termucoder ask "объясни этот код"
-    termucoder config show
-    termucoder config set generation.temperature 0.4
-    termucoder doctor
+Поддерживает команды: ask, config, server, model, setup, doctor, chat,
+а также флаги --version / --help.
 """
 
 import sys
 
+from termucoder import history as history_mod
 from termucoder.api import LLMClient
 from termucoder.config import (
     load_config,
@@ -157,6 +150,88 @@ def model_command(args):
         print(error(f"Неизвестная команда модели: {action}"))
 
 
+def chat_command(args):
+    """Интерактивный чат с моделью (v0.3)."""
+    flags = set(args)
+
+    if "--list" in flags:
+        sessions = history_mod.list_sessions()
+        if not sessions:
+            print(note("Нет сохранённых сессий"))
+            return
+        print(header("Сохранённые сессии:"))
+        for s in sessions:
+            print(f"  - {s}")
+        return
+
+    if "--delete" in flags:
+        rest = [a for a in args if a != "--delete"]
+        if not rest:
+            print(error("Укажи id сессии: termucoder chat --delete <id>"))
+            return
+        if history_mod.delete_session(rest[0]):
+            print(ok(f"Сессия удалена: {rest[0]}"))
+        else:
+            print(error("Сессия не найдена"))
+        return
+
+    if "--new" in flags:
+        session_id = history_mod.new_session_id()
+        messages = []
+        print(ok(f"Новая сессия: {session_id}"))
+    elif "--session" in flags:
+        idx = args.index("--session")
+        if idx + 1 >= len(args):
+            print(error("Укажи id сессии: termucoder chat --session <id>"))
+            return
+        session_id = args[idx + 1]
+        messages = history_mod.load_session(session_id)
+        print(ok(f"Продолжаем сессию: {session_id} ({len(messages)} сообщений)"))
+    else:
+        session_id = history_mod.latest_session() or history_mod.new_session_id()
+        messages = history_mod.load_session(session_id)
+        if messages:
+            print(ok(f"Продолжаем последнюю сессию: {session_id}"))
+        else:
+            print(ok(f"Новая сессия: {session_id}"))
+
+    print(muted("Вводи сообщения. /exit — выход, /clear — очистить историю."))
+    print()
+
+    client = LLMClient()
+
+    try:
+        while True:
+            try:
+                line = input("you> ").strip()
+            except EOFError:
+                print()
+                break
+            except KeyboardInterrupt:
+                print()
+                break
+
+            if not line:
+                continue
+
+            if line in ("/exit", "/quit", "exit", "quit"):
+                break
+
+            if line == "/clear":
+                messages = []
+                print(warning("История очищена"))
+                continue
+
+            messages.append({"role": "user", "content": line})
+            reply = client.chat(messages)
+            messages.append({"role": "assistant", "content": reply})
+            print("\n")
+            history_mod.save_session(session_id, messages)
+    finally:
+        history_mod.save_session(session_id, messages)
+        print(muted(f"Сессия сохранена: {session_id}"))
+
+
 def ask_command(args):
     """Одиночный вопрос модели."""
     prompt = " ".join(args)
@@ -166,7 +241,6 @@ def ask_command(args):
         return
 
     client = LLMClient()
-    print()
     client.ask(prompt)
     print()
 
@@ -177,6 +251,7 @@ def ask_command(args):
 
 COMMANDS_HELP = [
     ("ask <текст>",            "Задать модели одиночный вопрос"),
+    ("chat",                   "Интерактивный чат (--new, --list, --session, --delete)"),
     ("config",                 "Показать настройки (show/set/init)"),
     ("server <команда>",      "Управление llama-server (start/stop/restart/status)"),
     ("model <команда>",       "Управление моделями (list/info/use)"),
@@ -198,6 +273,7 @@ def print_help():
     print()
     print("Примеры:")
     print("  termucoder ask \"объясни этот код\"")
+    print("  termucoder chat")
     print("  termucoder config set generation.temperature 0.4")
     print("  termucoder doctor")
 
@@ -223,6 +299,7 @@ def main():
 
     handlers = {
         "ask": ask_command,
+        "chat": chat_command,
         "config": config_command,
         "server": server_command,
         "model": model_command,

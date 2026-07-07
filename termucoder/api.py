@@ -1,7 +1,8 @@
 """Клиент LLM API для TermuCoderAI.
 
 Обёртка над llama-server (совместимый с OpenAI API эндпоинт
-``/v1/chat/completions``). Поддерживает потоковую генерацию ответа.
+``/v1/chat/completions``). Поддерживает потоковую генерацию и диалог с
+историей сообщений.
 """
 
 import json
@@ -25,17 +26,16 @@ class LLMClient:
         self.max_tokens = config["generation"]["max_tokens"]
         self.system_prompt = config.get("prompts", {}).get("system", SYSTEM)
 
-    def ask(self, prompt: str) -> str:
-        """Отправляет одиночный вопрос без истории."""
-        messages = [
-            {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": prompt}
-        ]
+    # ------------------------------------------------------------------
+    # Внутренние хелперы
+    # ------------------------------------------------------------------
 
+    def _stream(self, messages, temperature=None, max_tokens=None):
+        """Отправляет запрос и потоково выводит ответ. Возвращает весь текст."""
         payload = {
             "messages": messages,
-            "temperature": self.temperature,
-            "max_tokens": self.max_tokens,
+            "temperature": temperature if temperature is not None else self.temperature,
+            "max_tokens": max_tokens if max_tokens is not None else self.max_tokens,
             "stream": True
         }
 
@@ -81,3 +81,29 @@ class LLMClient:
             print(f"\n❌ Ошибка запроса: {exc}")
 
         return result
+
+    # ------------------------------------------------------------------
+    # Публичные методы
+    # ------------------------------------------------------------------
+
+    def ask(self, prompt: str) -> str:
+        """Отправляет одиночный вопрос без истории."""
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": prompt}
+        ]
+
+        print()
+        return self._stream(messages)
+
+    def chat(self, history) -> str:
+        """Проводит диалог с моделью, передавая полную историю сообщений.
+
+        ``history`` — список словарей {"role": ..., "content": ...}
+        (только сообщения user/assistant, system добавляется автоматически).
+        """
+        messages = [{"role": "system", "content": self.system_prompt}]
+        messages.extend(history)
+
+        print()
+        return self._stream(messages)

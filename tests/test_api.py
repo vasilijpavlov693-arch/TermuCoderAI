@@ -51,6 +51,17 @@ class TestAPI(unittest.TestCase):
                 result = client.ask("привет")
         self.assertEqual(result, "Привет")
 
+    def test_chat_keeps_history(self):
+        client = LLMClient()
+        history = [
+            {"role": "user", "content": "кто ты?"},
+            {"role": "assistant", "content": "я бот"},
+        ]
+        with self._patch(_sse(["ок"])), io.StringIO() as buf:
+            with mock.patch("sys.stdout", buf):
+                result = client.chat(history)
+        self.assertEqual(result, "ок")
+
 
 if __name__ == "__main__":
     unittest.main()
