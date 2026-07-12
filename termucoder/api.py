@@ -1,9 +1,4 @@
-"""Клиент LLM API для TermuCoderAI.
-
-Обёртка над llama-server (совместимый с OpenAI API эндпоинт
-``/v1/chat/completions``). Поддерживает потоковую генерацию, диалог с
-историей сообщений и отправку контекста проекта.
-"""
+"""Клиент LLM API для TermuCoderAI."""
 
 import json
 import requests
@@ -13,117 +8,261 @@ from termucoder.prompts import SYSTEM
 
 
 class LLMClient:
-    """Клиент локального LLM-сервера."""
 
     def __init__(self):
+
         config = load_config()
 
         host = config["server"]["host"]
         port = config["server"]["port"]
 
         self.url = f"http://{host}:{port}"
-        self.temperature = config["generation"]["temperature"]
-        self.max_tokens = config["generation"]["max_tokens"]
-        self.system_prompt = config.get("prompts", {}).get("system", SYSTEM)
 
-    # ------------------------------------------------------------------
-    # Внутренние хелперы
-    # ------------------------------------------------------------------
+        generation = config.get(
+            "generation",
+            {}
+        )
 
-    def _endpoint(self) -> str:
+        self.temperature = generation.get(
+            "temperature",
+            0.2
+        )
+
+        self.max_tokens = generation.get(
+            "max_tokens",
+            512
+        )
+
+        self.top_p = generation.get(
+            "top_p",
+            0.9
+        )
+
+        self.top_k = generation.get(
+            "top_k",
+            40
+        )
+
+        self.stop = generation.get(
+            "stop",
+            None
+        )
+
+        self.system_prompt = config.get(
+            "prompts",
+            {}
+        ).get(
+            "system",
+            SYSTEM
+        )
+
+
+    def _endpoint(self):
+
         return self.url + "/v1/chat/completions"
 
-    def _stream(self, messages, temperature=None, max_tokens=None):
-        """Отправляет запрос и потоково выводит ответ. Возвращает весь текст."""
+
+    def _stream(
+        self,
+        messages,
+        temperature=None,
+        max_tokens=None
+    ):
+
         payload = {
             "messages": messages,
-            "temperature": temperature if temperature is not None else self.temperature,
-            "max_tokens": max_tokens if max_tokens is not None else self.max_tokens,
+
+            "temperature":
+                temperature
+                if temperature is not None
+                else self.temperature,
+
+            "max_tokens":
+                max_tokens
+                if max_tokens is not None
+                else self.max_tokens,
+
+            "top_p": self.top_p,
+
+            "top_k": self.top_k,
+
+            "stop": self.stop,
+
             "stream": True
         }
 
+
         result = ""
+        finish_reason = None
+
 
         try:
+
             with requests.post(
                 self._endpoint(),
                 json=payload,
                 stream=True,
-                timeout=300
+                timeout=(10, 300)
             ) as r:
+
+
+                r.raise_for_status()
+
                 r.encoding = "utf-8"
 
-                for line in r.iter_lines(decode_unicode=True):
+
+                for line in r.iter_lines(
+                    decode_unicode=True
+                ):
+
                     if not line:
                         continue
 
-                    if not line.startswith("data: "):
+
+                    if not line.startswith("data:"):
                         continue
 
-                    data = line[6:]
+
+                    data = line[5:].strip()
+
 
                     if data == "[DONE]":
                         break
 
+
                     try:
                         obj = json.loads(data)
-                    except json.JSONDecodeError:
+
+                    except Exception:
                         continue
 
-                    text = obj["choices"][0]["delta"].get("content", "")
+
+                    choice = obj.get(
+                        "choices",
+                        [{}]
+                    )[0]
+
+
+                    delta = choice.get(
+                        "delta",
+                        {}
+                    )
+
+
+                    text = delta.get(
+                        "content",
+                        ""
+                    )
+
 
                     if text:
-                        print(text, end="", flush=True)
+
+                        print(
+                            text,
+                            end="",
+                            flush=True
+                        )
+
                         result += text
 
+
+                    if choice.get(
+                        "finish_reason"
+                    ):
+
+                        finish_reason = choice["finish_reason"]
+                        break
+
+
+
         except requests.exceptions.ConnectionError:
+
             print("\n❌ AI сервер недоступен")
+
+
         except requests.exceptions.Timeout:
-            print("\n❌ Превышено время ожидания ответа")
-        except Exception as exc:  # noqa: BLE001
-            print(f"\n❌ Ошибка запроса: {exc}")
+
+            print("\n❌ Таймаут генерации")
+
+
+        except Exception as e:
+
+            print(
+                f"\n❌ Ошибка: {e}"
+            )
+
+
+        if finish_reason == "length":
+
+            print(
+                "\n\n[!] Ответ достиг лимита токенов"
+            )
+
+
+        print()
 
         return result
 
-    # ------------------------------------------------------------------
-    # Публичные методы
-    # ------------------------------------------------------------------
 
-    def ask(self, prompt: str) -> str:
-        """Отправляет одиночный вопрос без истории."""
+
+    def ask(self, prompt):
+
         messages = [
-            {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": prompt}
+
+            {
+                "role": "system",
+                "content": self.system_prompt
+            },
+
+            {
+                "role": "user",
+                "content": prompt
+            }
+
         ]
 
-        print()
         return self._stream(messages)
 
-    def chat(self, history) -> str:
-        """Проводит диалог с моделью, передавая полную историю сообщений.
 
-        ``history`` — список словарей {"role": ..., "content": ...}
-        (только сообщения user/assistant, system добавляется автоматически).
-        """
-        messages = [{"role": "system", "content": self.system_prompt}]
+
+    def chat(self, history):
+
+        messages = [
+
+            {
+                "role": "system",
+                "content": self.system_prompt
+            }
+
+        ]
+
         messages.extend(history)
 
-        print()
         return self._stream(messages)
 
-    def ask_context(self, context: str, question: str) -> str:
-        """Отправляет вопрос вместе с контекстом проекта."""
-        user_content = (
-            "Вот информация о проекте:\n\n"
-            f"{context}\n\n"
-            "--- КОНЕЦ КОНТЕКСТА ---\n\n"
-            f"Вопрос: {question}"
-        )
+
+
+    def ask_context(
+        self,
+        context,
+        question
+    ):
 
         messages = [
-            {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": user_content}
+
+            {
+                "role": "system",
+                "content": self.system_prompt
+            },
+
+            {
+                "role": "user",
+                "content":
+                    f"Контекст проекта:\n\n{context}\n\n"
+                    f"Вопрос:\n{question}"
+            }
+
         ]
 
-        print()
+
         return self._stream(messages)

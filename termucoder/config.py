@@ -32,7 +32,12 @@ DEFAULT_CONFIG = {
         "temperature": 0.2,
         "max_tokens": 512,
         "top_p": 0.9,
-        "top_k": 40
+        "top_k": 40,
+        "stop": [
+            "###",
+            "User:",
+            "Пользователь:"
+        ]
     },
 
     "prompts": {
