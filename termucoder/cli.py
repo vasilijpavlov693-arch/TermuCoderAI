@@ -41,6 +41,7 @@ from termucoder.model import (
     use_model
 )
 from termucoder.utils import ok, error, warning, note, header, muted
+from termucoder.editor import edit_file
 
 
 # ---------------------------------------------------------------------------
@@ -273,6 +274,26 @@ def analyze_command(args):
     print(context_mod.summarize(path))
 
 
+
+def edit_command(args):
+    """AI редактирование файла через diff."""
+
+    if len(args) < 2:
+        print(error(
+            "Использование: termucoder edit <файл> \"что изменить\""
+        ))
+        return
+
+    path = args[0]
+    instruction = " ".join(args[1:])
+
+    try:
+        edit_file(path, instruction)
+
+    except FileNotFoundError:
+        print(error(f"Файл не найден: {path}"))
+
+
 def ask_command(args):
     """Одиночный вопрос модели."""
     prompt = " ".join(args)
@@ -292,6 +313,7 @@ def ask_command(args):
 
 COMMANDS_HELP = [
     ("ask <текст>",            "Задать модели одиночный вопрос"),
+    ("edit <файл>",            "AI правка файла через diff"),
     ("chat",                   "Интерактивный чат (--new, --list, --session, --delete)"),
     ("config",                 "Показать настройки (show/set/init)"),
     ("server <команда>",      "Управление llama-server (start/stop/restart/status)"),
@@ -341,6 +363,7 @@ def main():
 
     handlers = {
         "ask": ask_command,
+        "edit": edit_command,
         "chat": chat_command,
         "config": config_command,
         "server": server_command,
