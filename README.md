@@ -29,6 +29,14 @@ TermuCoderAI — **консольная оболочка** вокруг лока
 
 > Работает на **Termux (Android)**, **Linux** и **Windows**.
 
+## Быстрая установка
+
+```bash
+curl -sSL https://raw.githubusercontent.com/vasilijpavlov693-arch/TermuCoderAI/main/install.sh | bash
+```
+
+Или вручную: `git clone ... && cd TermuCoderAI && pip install -e .`
+
 ## Содержание
 
 - [Быстрый старт](#быстрый-старт)
