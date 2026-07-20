@@ -29,8 +29,7 @@ echo Download llama.cpp...
 
 if not exist AI\llama-server.exe (
 
-curl -L -o AI\llama.cpp.zip ^
-https://github.com/ggerganov/llama.cpp/releases/latest/download/llama-b5480-bin-win-cuda-cu12.4-x64.zip
+powershell -Command "$r = Invoke-RestMethod 'https://api.github.com/repos/ggml-org/llama.cpp/releases/latest'; $a = $r.assets | Where-Object { $_.name -match 'win-cuda-12' -and $_.name -match '^llama-' -and $_.name -notmatch 'cudart' } | Select-Object -First 1; Write-Host 'Downloading:' $a.name; Invoke-WebRequest -Uri $a.browser_download_url -OutFile 'AI\llama.cpp.zip'"
 
 powershell -Command "Expand-Archive -Path AI\llama.cpp.zip -DestinationPath AI -Force"
 

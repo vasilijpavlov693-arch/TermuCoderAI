@@ -37,7 +37,7 @@ fi
 
 if [ ! -d ~/AI/llama.cpp ]; then
 
-git clone https://github.com/ggerganov/llama.cpp ~/AI/llama.cpp
+git clone https://github.com/ggml-org/llama.cpp ~/AI/llama.cpp
 
 fi
 
