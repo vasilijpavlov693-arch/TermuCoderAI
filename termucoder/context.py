@@ -119,6 +119,9 @@ def analyze_project(root: str = ".", max_file_chars: int = 4000, max_files: int 
 
 def build_prompt(root: str = ".") -> str:
     """Формирует итоговый текстовый контекст проекта для отправки модели."""
+    from termucoder import memory as memory_mod
+    from termucoder.config import load_config
+
     info = analyze_project(root)
 
     parts: "list[str]" = []
@@ -133,6 +136,15 @@ def build_prompt(root: str = ".") -> str:
         parts.append("\nСодержимое файлов:")
         for f, content in info["contents"].items():
             parts.append(f"\n--- {f} ---\n{content}")
+
+    cfg = load_config()
+    mem_cfg = cfg.get("memory", {})
+    if mem_cfg.get("enabled", True):
+        limit = mem_cfg.get("context_limit", 10)
+        knowledge = memory_mod.get_context(max_entries=limit)
+        if knowledge:
+            parts.append("\nСохранённые знания о проекте:")
+            parts.append(knowledge)
 
     return "\n".join(parts)
 

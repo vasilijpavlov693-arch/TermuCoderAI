@@ -48,6 +48,13 @@ DEFAULT_CONFIG = {
         "language": "ru",
         "editor": "",
         "auto_save_history": True
+    },
+
+    "memory": {
+        "enabled": True,
+        "max_entries": 100,
+        "auto_learn": True,
+        "context_limit": 10
     }
 }
 

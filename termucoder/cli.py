@@ -18,6 +18,7 @@ import sys
 
 from termucoder import history as history_mod
 from termucoder import context as context_mod
+from termucoder import memory as memory_mod
 from termucoder.api import LLMClient
 from termucoder.config import (
     load_config,
@@ -162,9 +163,39 @@ def model_command(args):
         print(error(f"Неизвестная команда модели: {action}"))
 
 
+def _try_extract_memory(client, user_msg, assistant_reply):
+    """Пытается извлечь важную информацию из диалога для памяти проекта."""
+    from termucoder.config import load_config
+
+    cfg = load_config()
+    mem_cfg = cfg.get("memory", {})
+    if not mem_cfg.get("enabled", True) or not mem_cfg.get("auto_learn", True):
+        return
+
+    try:
+        extract_prompt = (
+            "Проанализируй этот диалог. Если есть факт, который стоит "
+            "запомнить о проекте (архитектура, зависимости, решения, "
+            "конвенции) — верни ТОЛЬКО этот факт одним предложением. "
+            "Если ничего важного нет — верни пустую строку.\n\n"
+            f"Пользователь: {user_msg}\n"
+            f"Ассистент: {assistant_reply[:500]}"
+        )
+
+        result = client.ask(extract_prompt)
+        result = result.strip()
+
+        if result and len(result) > 10 and result != "Пустая строка":
+            from termucoder import memory as memory_mod
+            memory_mod.add(result, source="chat")
+    except Exception:
+        pass
+
+
 def chat_command(args):
-    """Интерактивный чат с моделью (v0.3)."""
+    """Интерактивный чат с моделью (v0.6)."""
     flags = set(args)
+    auto_memory = "--no-memory" not in flags
 
     if "--new" in flags:
         session_id = history_mod.new_session_id()
@@ -237,6 +268,9 @@ def chat_command(args):
             messages.append({"role": "assistant", "content": reply})
             print("\n")
             history_mod.save_session(session_id, messages)
+
+            if auto_memory:
+                _try_extract_memory(client, line, reply)
     finally:
         history_mod.save_session(session_id, messages)
         print(muted(f"Сессия сохранена: {session_id}"))
@@ -325,6 +359,91 @@ def ask_command(args):
     print()
 
 
+def memory_command(args):
+    """Управление памятью проекта: add / list / search / delete / context."""
+    if not args:
+        print("Использование:\n"
+              "  termucoder memory add \"текст\" --tags t1,t2\n"
+              "  termucoder memory list\n"
+              "  termucoder memory search \"запрос\"\n"
+              "  termucoder memory delete <id>\n"
+              "  termucoder memory context")
+        return
+
+    action = args[0]
+
+    if action == "add":
+        if len(args) < 2:
+            print(error("Укажи текст: termucoder memory add \"текст\""))
+            return
+        tags = []
+        text_parts = []
+        i = 1
+        while i < len(args):
+            if args[i] == "--tags" and i + 1 < len(args):
+                tags = [t.strip() for t in args[i + 1].split(",")]
+                i += 2
+            else:
+                text_parts.append(args[i])
+                i += 1
+        content = " ".join(text_parts)
+        entry = memory_mod.add(content, tags=tags)
+        print(ok(f"Запись создана: {entry['id']}"))
+        return
+
+    if action == "list":
+        entries = memory_mod.list_all()
+        if not entries:
+            print(note("Память пуста"))
+            return
+        print(header(f"Память проекта ({len(entries)} записей):"))
+        print()
+        for e in entries:
+            tags = ", ".join(e.get("tags", []))
+            tag_str = f" [{tags}]" if tags else ""
+            print(f"  {e['id']}{tag_str}")
+            print(f"    {e['content']}")
+            print()
+        return
+
+    if action == "search":
+        if len(args) < 2:
+            print(error("Укажи запрос: termucoder memory search \"запрос\""))
+            return
+        query = " ".join(args[1:])
+        results = memory_mod.search(query)
+        if not results:
+            print(note("Ничего не найдено"))
+            return
+        print(header(f"Найдено {len(results)} записей:"))
+        print()
+        for e in results:
+            print(f"  {e['id']}: {e['content']}")
+        return
+
+    if action == "delete":
+        if len(args) < 2:
+            print(error("Укажи ID: termucoder memory delete <id>"))
+            return
+        if memory_mod.delete(args[1]):
+            print(ok(f"Запись удалена: {args[1]}"))
+        else:
+            print(error("Запись не найдена"))
+        return
+
+    if action == "context":
+        ctx = memory_mod.get_context()
+        if not ctx:
+            print(note("Память пуста"))
+            return
+        print(header("Контекст для AI:"))
+        print()
+        print(ctx)
+        return
+
+    print(error(f"Неизвестная команда memory: {action}"))
+
+
 # ---------------------------------------------------------------------------
 # Справка
 # ---------------------------------------------------------------------------
@@ -333,6 +452,7 @@ COMMANDS_HELP = [
     ("ask <текст>",            "Задать модели одиночный вопрос"),
     ("edit <файл>",            "AI правка файла (--preview, --undo)"),
     ("chat",                   "Интерактивный чат (--new, --list, --session, --delete)"),
+    ("memory <команда>",      "Память проекта (add/list/search/delete/context)"),
     ("config",                 "Показать настройки (show/set/init)"),
     ("server <команда>",      "Управление llama-server (start/stop/restart/status)"),
     ("model <команда>",       "Управление моделями (list/info/use)"),
@@ -386,6 +506,7 @@ def main():
         "config": config_command,
         "server": server_command,
         "model": model_command,
+        "memory": memory_command,
         "setup": lambda a: setup("--full" in a, "--start" in a),
         "doctor": lambda a: doctor(),
         "analyze": analyze_command,
