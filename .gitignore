@@ -38,3 +38,7 @@ models/
 Thumbs.db
 
 settings.json
+
+# Generated launchers (created by install.bat)
+/start.bat
+/start_server.bat
