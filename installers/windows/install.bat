@@ -15,28 +15,29 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
+cd /d %~dp0\..\..
 
 echo Installing dependencies...
 
 python -m pip install --upgrade pip
-pip install -r requirements.txt
-
+python -m pip install -r requirements.txt
+python -m pip install -e .
 
 if not exist models mkdir models
 if not exist AI mkdir AI
 
-
 echo Download llama.cpp...
 
-
-if not exist AI\llama.cpp.exe (
+if not exist AI\llama-server.exe (
 
 curl -L ^
 -o AI\llama.cpp.zip ^
 https://github.com/ggerganov/llama.cpp/releases/latest/download/llama-b5480-bin-win-cuda-cu12.4-x64.zip
 
 
-powershell -Command "Expand-Archive AI\llama.cpp.zip AI"
+powershell -Command "Expand-Archive -Path AI\llama.cpp.zip -DestinationPath AI -Force"
+
+del AI\llama.cpp.zip
 
 )
 
@@ -81,7 +82,7 @@ echo First run:
 echo start_server.bat
 echo.
 echo Then:
-echo start.bat code "write quicksort"
+echo start.bat ask "write quicksort"
 echo.
 
 pause

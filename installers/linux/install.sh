@@ -16,7 +16,8 @@ build-essential \
 wget
 
 
-pip3 install -r requirements.txt
+python3 -m pip install -r requirements.txt
+python3 -m pip install -e .
 
 
 mkdir -p ~/AI/models
@@ -48,3 +49,5 @@ cmake --build build -j$(nproc)
 
 
 echo "Done!"
+echo ""
+echo "Run: termucoder ask \"hello\""

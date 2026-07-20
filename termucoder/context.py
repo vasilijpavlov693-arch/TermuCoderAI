@@ -7,7 +7,6 @@
   - итоговый промпт для передачи модели.
 """
 
-import functools
 import os
 
 from termucoder.search import scan_project, count_by_ext
@@ -74,7 +73,6 @@ def read_docs(root: str, files: "list[str]") -> str:
     return "\n\n".join(blocks)
 
 
-@functools.lru_cache(maxsize=32)
 def analyze_project(root: str = ".", max_file_chars: int = 4000, max_files: int = 20) -> dict:
     """Анализирует проект и возвращает словарь с контекстом.
 

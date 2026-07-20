@@ -20,6 +20,8 @@ pip install --upgrade pip
 
 pip install -r requirements.txt
 
+pip install -e .
+
 
 echo "[2/5] Preparing directories..."
 
@@ -62,5 +64,4 @@ cmake --build build -j$(nproc)
 echo "[5/5] Done"
 
 echo ""
-echo "Run:"
-echo "~/TermuCoderAI/installers/termux/start.sh"
+echo "Run: termucoder ask \"hello\""

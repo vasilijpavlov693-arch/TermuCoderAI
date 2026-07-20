@@ -16,4 +16,4 @@ echo "Starting TermuCoder..."
 
 cd ~/TermuCoderAI
 
-termucoder ask "$@"
+termucoder "$@"

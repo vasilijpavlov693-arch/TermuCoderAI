@@ -37,6 +37,9 @@ class _Resp:
     def __exit__(self, *a):
         return False
 
+    def raise_for_status(self):
+        pass
+
     def iter_lines(self, decode_unicode=True):
         for ln in self._lines:
             yield ln
