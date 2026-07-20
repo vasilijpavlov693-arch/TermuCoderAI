@@ -29,6 +29,9 @@ models/
 # Logs
 *.log
 
+# Runtime
+*.pid
+
 # Patches
 *.patch
 *.diff

@@ -1,404 +1,222 @@
-# TermuCoderAI
+<p align="center">
+  <h1 align="center">🤖 TermuCoderAI</h1>
+  <p align="center">
+    <strong>Локальный AI-ассистент для разработчика</strong><br>
+    Работает на вашем устройстве — без облака и без отправки данных
+  </p>
+</p>
 
-**Локальный AI-кодер и ассистент для разработчика.** Работает полностью на
-вашем устройстве — телефоне под Termux (Android), Linux или Windows — без
-облачных API и без отправки данных на сторонние серверы. Вся генерация
-происходит через локальную LLM (llama.cpp / `llama-server`) на вашем же
-железе.
+<p align="center">
+  <img src="https://img.shields.io/badge/version-0.5.0-green" alt="Version">
+  <img src="https://img.shields.io/badge/python-3.11+-3776AB?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/license-MIT-yellow" alt="License">
+  <img src="https://img.shields.io/badge/platforms-Windows%20%7C%20Linux%20%7C%20Termux-lightgrey" alt="Platforms">
+  <img src="https://img.shields.io/badge/llama--cpp-ready-orange" alt="llama.cpp">
+</p>
 
-> Если вы хотите просто пользоваться инструментом — читайте раздел
-> [Быстрый старт](#быстрый-старт). Остальное пригодится, когда захотите
-> разобраться глубже.
+<p align="center">
+  <a href="#быстрый-старт">Быстрый старт</a> •
+  <a href="#команды">Команды</a> •
+  <a href="#установка">Установка</a> •
+  <a href="#дорожная-карта">Дорожная карта</a>
+</p>
 
-------------------------------------------------------------------------
+---
+
+TermuCoderAI — **консольная оболочка** вокруг локальной языковой модели. Вся
+генерация происходит через llama.cpp на вашем железе: нет ключей API, нет
+облака, полная приватность.
+
+> Работает на **Termux (Android)**, **Linux** и **Windows**.
 
 ## Содержание
 
-- [Что это и зачем](#что-это-и-зачем)
-- [Как это работает (кратко)](#как-это-работает-кратко)
-- [Требования](#требования)
-- [Установка](#установка)
 - [Быстрый старт](#быстрый-старт)
+- [Установка](#установка)
 - [Команды](#команды)
-  - [ask — задать вопрос](#ask--задать-вопрос)
+  - [ask — вопрос модели](#ask--вопрос-модели)
   - [chat — интерактивный чат](#chat--интерактивный-чат)
+  - [edit — AI-правка файла](#edit--ai-правка-файла)
   - [analyze — анализ проекта](#analyze--анализ-проекта)
   - [config — настройки](#config--настройки)
-  - [server — управление LLM-сервером](#server--управление-llm-сервером)
+  - [server — управление сервером](#server--управление-сервером)
   - [model — управление моделями](#model--управление-моделями)
-  - [setup — первоначальная настройка](#setup--первоначальная-настройка)
+  - [setup — настройка окружения](#setup--настройка-окружения)
   - [doctor — диагностика](#doctor--диагностика)
-  - [--version / --help](#--version--help)
-- [Конфигурация (settings.json)](#конфигурация-settingsjson)
+- [Конфигурация](#конфигурация)
 - [Структура проекта](#структура-проекта)
 - [Дорожная карта](#дорожная-карта)
-- [Лицензия](#лицензия)
-
-------------------------------------------------------------------------
-
-## Что это и зачем
-
-TermuCoderAI — это **консольная оболочка** (CLI) вокруг локальной языковой
-модели. Она помогает:
-
-- задавать модели вопросы по коду и не только (`ask`);
-- вести многоходовый диалог с сохранением истории (`chat`);
-- анализировать структуру вашего проекта и «скармливать» её модели как
-  контекст (`analyze`);
-- управлять локальным AI-сервером, моделями и настройками из одной точки.
-
-Главная идея — **приватность и автономность**: нет ключей API, нет
-облака, модель крутится на вашем устройстве.
-
-------------------------------------------------------------------------
-
-## Как это работает (кратко)
-
-```
-Вы (терминал)  ──>  termucoder (CLI)  ──>  llama-server (локально)
-                                                         │
-                                                         ▼
-                                                  локальная LLM (GGUF)
-```
-
-1. Вы запускаете `llama-server` с выбранной GGUF-моделью — он поднимает
-   локальный HTTP-эндпоинт, совместимый с OpenAI API
-   (`http://127.0.0.1:8080/v1/chat/completions`).
-2. `termucoder` отправляет туда ваши запросы и потоково выводит ответ модели.
-
-`termucoder` сам по себе модель не содержит — он лишь **управляет**
-сервером и формирует запросы к нему.
-
-------------------------------------------------------------------------
-
-## Требования
-
-- **Python 3.11+**
-- **llama.cpp**, собранный с поддержкой `llama-server` (или готовый бинарный
-  файл)
-- **GGUF-модель** (например, `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` —
-  небольшая и быстрая, подходит для телефона)
-- Пакет Python **`requests`**
-- ОС: **Termux (Android)**, **Linux** или **Windows**
-
-> Модель и llama.cpp занимают место на диске и требуют ресурсов устройства.
-> Для слабых телефонов берите маленькие квантизованные модели (1.5B–3B,
-> `q4_*`).
-
-------------------------------------------------------------------------
-
-## Установка
-
-### Вариант 1. Готовый установщик (проще всего)
-
-В папке `installers/` есть скрипты для вашей ОС:
-
-| ОС       | Скрипт                          |
-|----------|---------------------------------|
-| Termux   | `installers/termux/install.sh`  |
-| Linux    | `installers/linux/install.sh`   |
-| Windows  | `installers/windows/install.bat`|
-
-Пример для Termux:
-
-```bash
-bash installers/termux/install.sh
-```
-
-Установщик ставит Python-зависимости, готовит папки, скачивает пример
-модели и собирает llama.cpp.
-
-### Вариант 2. Вручную
-
-```bash
-# 1. Клонируйте репозиторий
-git clone https://github.com/vasilijpavlov693-arch/TermuCoderAI.git
-cd TermuCoderAI
-
-# 2. Установите Python-зависимости
-pip install requests
-
-# 3. Соберите llama.cpp (или скачайте готовый llama-server)
-#    См. https://github.com/ggerganov/llama.cpp
-#    Итоговый бинарь ожидается в: ~/AI/llama.cpp/build/bin/llama-server
-
-# 4. Положите GGUF-модель в ~/AI/models/
-#    Например: ~/AI/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf
-```
-
-------------------------------------------------------------------------
 
 ## Быстрый старт
 
-Предположим, модель уже лежит в `~/AI/models/`.
-
 ```bash
-# 1. Создайте настройки по умолчанию и проверьте окружение
-termucoder setup --full
+# 1. Установка (Termux/Linux/Windows)
+bash installers/termux/install.sh    # или对应你的 ОС
 
-# 2. Укажите путь к вашей модели
-termucoder config set model.path "~/AI/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf"
-
-# 3. Запустите локальный LLM-сервер (оставьте этот терминал работать
-#    или запустите в фоне). Отдельной командой можно и так:
+# 2. Запуск сервера
 termucoder server start
 
-# 4. Убедитесь, что сервер отвечает
-termucoder doctor
+# 3. Задайте вопрос
+termucoder ask "Напиши функцию для бинарного поиска на Python"
 
-# 5. Задайте вопрос модели
-termucoder ask "Объясни, что делает функция main() в Python"
-
-# 6. Или начните интерактивный чат
+# 4. Или начните чат
 termucoder chat
 ```
 
-Готово — вы пользуетесь локальным AI.
+## Установка
 
-> Если `doctor` показывает проблемы, он подскажет, чего не хватает
-> (Python, llama-server, модель, доступность API).
+### Автоматическая (рекомендуется)
 
-------------------------------------------------------------------------
+| ОС       | Команда                                  |
+|----------|------------------------------------------|
+| Termux   | `bash installers/termux/install.sh`      |
+| Linux    | `bash installers/linux/install.sh`       |
+| Windows  | Запустите `installers/windows/install.bat`|
+
+### Вручную
+
+```bash
+git clone https://github.com/vasilijpavlov693-arch/TermuCoderAI.git
+cd TermuCoderAI
+pip install -e .
+```
+
+Требуется: Python 3.11+, llama.cpp с `llama-server`, GGUF-модель.
 
 ## Команды
 
-Формат вызова всегда один:
+### ask — вопрос модели
 
 ```bash
-termucoder <команда> [аргументы]
+termucoder ask "Чем list отличается от tuple?"
 ```
 
-Справку по любой команде можно получить так: `termucoder --help`.
-
-### ask — задать вопрос
-
-Отправляет **одиночный** вопрос модели и выводит ответ.
-
-```bash
-termucoder ask "Напиши функцию на Python, которая считает сумму списка"
-termucoder ask "Чем отличаются list и tuple в Python?"
-```
-
-История между вызовами `ask` не сохраняется (для диалога используйте
-`chat`).
+Одиночный запрос без сохранения истории.
 
 ### chat — интерактивный чат
 
-Запускает диалог с моделью. История сообщений сохраняется в папку
-`history/`, поэтому разговор можно продолжить позже.
-
 ```bash
-termucoder chat                 # продолжить последнюю сессию или начать новую
-termucoder chat --new           # принудительно новая сессия
-termucoder chat --list           # показать сохранённые сессии
-termucoder chat --session 20260707-143000   # продолжить конкретную сессию
-termucoder chat --delete 20260707-143000    # удалить сессию
+termucoder chat              # новая или последняя сессия
+termucoder chat --new        # принудительно новая
+termucoder chat --list       # список сессий
+termucoder chat --session ID  # продолжить сессию
+termucoder chat --delete ID   # удалить сессию
 ```
 
-Внутри чата доступны команды:
+Команды внутри чата: `/exit`, `/quit`, `/clear`.
 
-| Команда  | Действие                        |
-|----------|---------------------------------|
-| `/exit`  | выйти из чата                   |
-| `/quit`  | выйти из чата                   |
-| `/clear` | очистить историю текущей сессии |
+### edit — AI-правка файла
 
-После каждого сообщения сессия автоматически сохраняется.
+```bash
+termucoder edit script.py "замени pass на print('hello')"
+termucoder edit --preview script.py "добавь docstring к функции main"
+termucoder edit --undo script.py
+```
+
+| Флаг        | Действие                                      |
+|-------------|-----------------------------------------------|
+| без флагов  | Показывает diff и применяет изменения         |
+| `--preview` | Только показывает diff, файл не меняется      |
+| `--undo`    | Восстанавливает файл из `.bak` резервной копии|
 
 ### analyze — анализ проекта
 
-Анализирует структуру каталога: строит дерево файлов, читает документацию
-(`README` и т.п.), учитывает `.gitignore` и стандартные игнорируемые папки
-(`.git`, `__pycache__`, `node_modules`, …), а затем формирует контекст для
-модели.
-
 ```bash
-termucoder analyze .                 # показать структуру и краткую сводку
-termucoder analyze src/              # анализ конкретной папки
-termucoder analyze . --ask "где здесь происходит авторизация?"
-termucoder analyze . --json          # вывести структуру и статистику в JSON
+termucoder analyze .                         # структура и сводка
+termucoder analyze . --ask "где здесь API?"  # вопрос по проекту
+termucoder analyze . --json                  # вывод в JSON
 ```
-
-Ключ `--ask` полезен, когда нужно спросить модель о конкретном проекте:
-TermuCoderAI соберёт его содержимое и передаст модели как контекст, а затем
-выведет ответ.
-
-> Для больших проектов в контекст попадает ограниченное число файлов, чтобы
-> не перегрузить модель.
 
 ### config — настройки
 
-Управление `settings.json`.
-
 ```bash
-termucoder config                 # показать все настройки
-termucoder config show generation.temperature   # показать одно значение
+termucoder config                             # показать всё
 termucoder config set generation.temperature 0.4
-termucoder config set generation.max_tokens 1024
-termucoder config set model.path "~/AI/models/my-model.gguf"
-termucoder config init            # создать settings.json заново (если нет)
+termucoder config set model.path "~/AI/models/model.gguf"
 ```
 
-Ключ задаётся в формате `секция.поле`. Тип значения определяется
-автоматически: `42` → число, `0.4` → дробное, `true`/`false` → логическое.
-
-### server — управление LLM-сервером
-
-`llama-server` запускает локальную модель и отдаёт API. TermuCoderAI им
-управляет:
+### server — управление сервером
 
 ```bash
-termucoder server start      # запустить llama-server (в фоне)
-termucoder server stop       # остановить
-termucoder server restart    # перезапустить (например, после смены модели)
-termucoder server status     # проверить, запущен ли сервер
+termucoder server start    # запустить
+termucoder server stop     # остановить
+termucoder server restart  # перезапустить
+termucoder server status   # статус
 ```
-
-Параметры запуска (порт, количество потоков, слои на GPU и т.д.) берутся из
-`settings.json` (секция `server`).
 
 ### model — управление моделями
 
-Работа с GGUF-моделями в папке `~/AI/models/`.
-
 ```bash
-termucoder model list    # список доступных моделей
-termucoder model info    # текущая выбранная модель
-termucoder model use qwen2.5-coder-1.5b-instruct-q4_k_m.gguf   # выбрать модель
+termucoder model list                          # список моделей
+termucoder model info                          # текущая модель
+termucoder model use qwen2.5-coder-1.5b.gguf  # выбрать модель
 ```
 
-После смены модели перезапустите сервер: `termucoder server restart`.
-
-### setup — первоначальная настройка
+### setup — настройка окружения
 
 ```bash
-termucoder setup           # базовая настройка (папки, settings.json)
-termucoder setup --full    # полная: зависимости, проверка llama.cpp, выбор модели
-termucoder setup --start   # настройка + сразу запустить сервер
+termucoder setup           # базовая
+termucoder setup --full    # полная (зависимости + llama.cpp + модель)
 ```
 
 ### doctor — диагностика
 
-Проверяет всё, что нужно для работы: Python, зависимости, `llama-server`,
-наличие модели, доступность API и конфигурацию.
-
 ```bash
-termucoder doctor
+termucoder doctor  # проверит Python, llama-server, модель, API
 ```
 
-Выводит ✅ для каждой успешной проверки и ✗ там, где есть проблема, с
-подсказкой, что делать.
+## Конфигурация
 
-### --version / --help
-
-```bash
-termucoder --version     # номер версии и список возможностей
-termucoder --help        # это же, что и справка по командам
-```
-
-------------------------------------------------------------------------
-
-## Конфигурация (settings.json)
-
-Настройки хранятся в файле `settings.json` в текущей директории. Пример:
+Настройки хранятся в `settings.json`:
 
 ```json
 {
-  "server": {
-    "host": "127.0.0.1",
-    "port": 8080,
-    "context": 4096,
-    "threads": 4,
-    "gpu_layers": 0,
-    "parallel": 1
-  },
-  "model": {
-    "name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
-    "path": "~/AI/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf"
-  },
-  "generation": {
-    "temperature": 0.2,
-    "max_tokens": 512,
-    "top_p": 0.9,
-    "top_k": 40
-  },
-  "prompts": {
-    "system": "Ты AI помощник программиста."
-  },
-  "user": {
-    "language": "ru",
-    "editor": "",
-    "auto_save_history": true
-  }
+  "server": { "host": "127.0.0.1", "port": 8080 },
+  "model": { "name": "model.gguf", "path": "~/AI/models/model.gguf" },
+  "generation": { "temperature": 0.2, "max_tokens": 512 }
 }
 ```
-
-Кратко по секциям:
-
-- **server** — хост/порт сервера и параметры запуска `llama-server`
-  (`context` — размер контекста, `threads` — число потоков CPU,
-  `gpu_layers` — сколько слоёв перенести на GPU, `parallel` — число
-  параллельных слотов).
-- **model** — имя и путь к GGUF-модели.
-- **generation** — параметры генерации (`temperature`, `max_tokens`,
-  `top_p`, `top_k`).
-- **prompts** — системный промпт модели.
-- **user** — пользовательские предпочтения (язык, редактор, автосохранение
-  истории).
-
-Изменить любое значение можно из командной строки:
-
-```bash
-termucoder config set generation.temperature 0.4
-```
-
-------------------------------------------------------------------------
 
 ## Структура проекта
 
 ```
 TermuCoderAI/
 ├── termucoder/
-│   ├── cli.py        Точка входа, разбор команд
-│   ├── api.py        Клиент LLM (ask / chat / ask_context)
-│   ├── config.py     Работа с settings.json
-│   ├── utils.py      Общие helper-функции (вывод, .gitignore)
-│   ├── history.py    История чата (сессии)
-│   ├── search.py     Сканирование файлов проекта
-│   ├── context.py    Анализ проекта и контекст для AI
-│   ├── server.py     Управление llama-server
-│   ├── model.py      Управление моделями
-│   ├── setup.py      Первоначальная настройка
-│   ├── doctor.py     Диагностика системы
-│   └── version.py    Номер версии
-├── installers/       Скрипты установки (termux / linux / windows)
-├── tests/            Юнит-тесты
-├── settings.json     Ваша конфигурация (создаётся командой setup/config init)
-├── history/          Сохранённые сессии чата (создаётся при использовании chat)
+│   ├── cli.py            Точка входа, разбор команд
+│   ├── api.py            Клиент LLM (ask / chat / ask_context)
+│   ├── config.py         Работа с settings.json
+│   ├── editor.py         AI-редактор кода (diff + preview + undo)
+│   ├── search_replace.py Механизм SEARCH/REPLACE
+│   ├── edit_validator.py Валидация ответов LLM
+│   ├── diff.py           Генерация unified diff
+│   ├── history.py        История чата (сессии)
+│   ├── search.py         Сканирование файлов проекта
+│   ├── context.py        Анализ проекта и контекст для AI
+│   ├── server.py         Управление llama-server
+│   ├── model.py          Управление моделями
+│   ├── setup.py          Первоначальная настройка
+│   ├── doctor.py         Диагностика системы
+│   ├── prompts.py        Системные промпты
+│   ├── utils.py          Общие helper-функции
+│   └── version.py        Номер версии
+├── installers/           Скрипты установки
+├── tests/                Юнит-тесты (53 теста)
+├── settings.example.json Пример конфигурации
 ├── VERSION
-├── README.md
-└── pyproject.toml
+├── pyproject.toml
+└── README.md
 ```
-
-Установка как команды `termucoder` настраивается через `pyproject.toml`
-(`termucoder = "termucoder.cli:main"`).
-
-------------------------------------------------------------------------
 
 ## Дорожная карта
 
-Текущая версия — **v0.4 (Анализ проектов)**. Дальше планируется:
-
-| Версия | Назначение                                    |
-|--------|-----------------------------------------------|
-| v0.5   | AI-редактор кода (генерация/правка через diff)|
-| v0.6   | Память проектов (локальное хранилище знаний)  |
-| v0.7   | Расширения и плагины                          |
-| v0.8   | Полировка (цветной вывод, автодополнение)     |
-| v0.9   | Release Candidate (стабилизация)              |
-| v1.0   | Первый стабильный релиз                        |
-
-------------------------------------------------------------------------
+| Версия | Статус | Назначение                                    |
+|--------|--------|-----------------------------------------------|
+| v0.4   | ✅ Done | Анализ проектов                               |
+| v0.5   | ✅ Done | AI-редактор кода (diff / preview / undo)      |
+| v0.6   | 🔜     | Память проектов (локальное хранилище знаний)  |
+| v0.7   | 📋     | Расширения и плагины                          |
+| v0.8   | 📋     | Полировка (цветной вывод, автодополнение)     |
+| v1.0   | 📋     | Первый стабильный релиз                       |
 
 ## Лицензия
 
