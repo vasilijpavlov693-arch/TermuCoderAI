@@ -64,18 +64,26 @@ echo ""
 
 # Check Python
 info "Checking Python..."
-if ! command -v python3 &>/dev/null && ! command -v python &>/dev/null; then
+PYTHON=""
+if command -v python3 &>/dev/null; then
+    PYTHON=python3
+elif command -v python &>/dev/null; then
+    PYTHON=python
+elif command -v py &>/dev/null; then
+    PYTHON="py -3"
+fi
+
+if [[ -z "$PYTHON" ]]; then
     error "Python not found. Install Python 3.11+"
     exit 1
 fi
 
-PYTHON=$(command -v python3 || command -v python)
 PY_VERSION=$($PYTHON --version 2>&1 | grep -oE '[0-9]+\.[0-9]+')
 success "Python $PY_VERSION"
 
 # Check pip
 info "Checking pip..."
-if ! $PYTHON -m pip --version &>/dev/null; then
+if ! $PYTHON -m pip --version >/dev/null 2>&1; then
     error "pip not found. Install pip: $PYTHON -m ensurepip --upgrade"
     exit 1
 fi
@@ -133,30 +141,14 @@ info "Installing termucoder-ai..."
 $PYTHON -m pip install -e . -q 2>/dev/null || $PYTHON -m pip install -r requirements.txt -q 2>/dev/null
 success "Package installed"
 
-# Create directories
-mkdir -p "$MODELS_DIR"
-success "Models directory: $MODELS_DIR"
-
-# Download model
-if [[ "$SKIP_MODEL" == false ]]; then
-    MODEL="$MODELS_DIR/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf"
-    if [[ ! -f "$MODEL" ]]; then
-        info "Downloading model (1.1 GB, may take a while)..."
-        wget -q --show-progress -O "$MODEL" \
-            "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf" \
-            || warn "Model download failed. Download manually later."
-        success "Model downloaded"
-    else
-        success "Model already exists"
-    fi
-else
-    warn "Skipping model download (--no-model)"
-fi
-
-# Setup config
+# Create settings.json if missing
 info "Setting up configuration..."
 if [[ ! -f "settings.json" ]]; then
-    cat > settings.json << 'CONFIG'
+    if [[ -f "settings.example.json" ]]; then
+        cp settings.example.json settings.json
+        success "Configuration created from example"
+    else
+        cat > settings.json << 'CONFIG'
 {
     "server": {
         "host": "127.0.0.1",
@@ -185,9 +177,36 @@ if [[ ! -f "settings.json" ]]; then
     }
 }
 CONFIG
-    success "Configuration created"
+        success "Configuration created"
+    fi
 else
     success "Configuration exists"
+fi
+
+# Download model
+if [[ "$SKIP_MODEL" == false ]]; then
+    MODEL="$MODELS_DIR/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf"
+    if [[ ! -f "$MODEL" ]]; then
+        info "Downloading model (1.1 GB, may take a while)..."
+        if command -v wget &>/dev/null; then
+            wget -q --show-progress -O "$MODEL" \
+                "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf" \
+                || warn "Model download failed. Download manually later."
+        elif command -v curl &>/dev/null; then
+            curl -L --progress-bar -o "$MODEL" \
+                "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf" \
+                || warn "Model download failed. Download manually later."
+        else
+            warn "Neither wget nor curl found. Download model manually."
+        fi
+        if [[ -f "$MODEL" ]]; then
+            success "Model downloaded"
+        fi
+    else
+        success "Model already exists"
+    fi
+else
+    warn "Skipping model download (--no-model)"
 fi
 
 # Final check

@@ -109,6 +109,9 @@ class TermuCompleter:
 
 def setup_completion():
     """Настраивает readline для автодополнения."""
+    if readline is None:
+        return
+
     completer = TermuCompleter()
 
     readline.set_completer(completer.complete)
