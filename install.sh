@@ -65,12 +65,31 @@ echo ""
 # Check Python
 info "Checking Python..."
 PYTHON=""
+PY_VERSION=""
+
+# Try python3, but skip Windows Store stub (returns exit code 49, no version)
 if command -v python3 &>/dev/null; then
-    PYTHON=python3
-elif command -v python &>/dev/null; then
-    PYTHON=python
-elif command -v py &>/dev/null; then
-    PYTHON="py -3"
+    _ver=$(python3 --version 2>&1) || true
+    if [[ "$_ver" =~ [0-9]+\.[0-9]+ ]]; then
+        PYTHON=python3
+        PY_VERSION="${BASH_REMATCH[0]}"
+    fi
+fi
+
+if [[ -z "$PYTHON" ]] && command -v python &>/dev/null; then
+    _ver=$(python --version 2>&1) || true
+    if [[ "$_ver" =~ [0-9]+\.[0-9]+ ]]; then
+        PYTHON=python
+        PY_VERSION="${BASH_REMATCH[0]}"
+    fi
+fi
+
+if [[ -z "$PYTHON" ]] && command -v py &>/dev/null; then
+    _ver=$(py -3 --version 2>&1) || true
+    if [[ "$_ver" =~ [0-9]+\.[0-9]+ ]]; then
+        PYTHON="py -3"
+        PY_VERSION="${BASH_REMATCH[0]}"
+    fi
 fi
 
 if [[ -z "$PYTHON" ]]; then
@@ -78,7 +97,6 @@ if [[ -z "$PYTHON" ]]; then
     exit 1
 fi
 
-PY_VERSION=$($PYTHON --version 2>&1 | grep -oE '[0-9]+\.[0-9]+')
 success "Python $PY_VERSION"
 
 # Check pip
