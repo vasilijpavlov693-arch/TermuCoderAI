@@ -29,7 +29,7 @@ def is_valid(response: str):
     )
 
 
-    if len(blocks) != 1:
+    if len(blocks) < 1:
         return False
 
 

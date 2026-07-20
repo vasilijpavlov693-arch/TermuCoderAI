@@ -278,20 +278,38 @@ def analyze_command(args):
 def edit_command(args):
     """AI редактирование файла через diff."""
 
-    if len(args) < 2:
+    flags = set(args)
+    rest = [a for a in args if not a.startswith("--")]
+
+    if "--undo" in flags:
+        if not rest:
+            print(error("Укажи файл: termucoder edit --undo <файл>"))
+            return
+        try:
+            from termucoder.editor import undo_edit
+            undo_edit(rest[0])
+        except FileNotFoundError as e:
+            print(error(str(e)))
+        return
+
+    if len(rest) < 2:
         print(error(
-            "Использование: termucoder edit <файл> \"что изменить\""
+            "Использование: termucoder edit [--preview] <файл> \"что изменить\""
         ))
         return
 
-    path = args[0]
-    instruction = " ".join(args[1:])
+    path = rest[0]
+    instruction = " ".join(rest[1:])
+    preview = "--preview" in flags
 
     try:
-        edit_file(path, instruction)
-
+        edit_file(path, instruction, preview=preview)
     except FileNotFoundError:
         print(error(f"Файл не найден: {path}"))
+    except ValueError as e:
+        print(error(str(e)))
+    except Exception as e:
+        print(error(str(e)))
 
 
 def ask_command(args):
@@ -313,7 +331,7 @@ def ask_command(args):
 
 COMMANDS_HELP = [
     ("ask <текст>",            "Задать модели одиночный вопрос"),
-    ("edit <файл>",            "AI правка файла через diff"),
+    ("edit <файл>",            "AI правка файла (--preview, --undo)"),
     ("chat",                   "Интерактивный чат (--new, --list, --session, --delete)"),
     ("config",                 "Показать настройки (show/set/init)"),
     ("server <команда>",      "Управление llama-server (start/stop/restart/status)"),

@@ -3,8 +3,11 @@
 import os
 
 from termucoder.api import LLMClient
+from termucoder.diff import create_diff
 from termucoder.edit_validator import is_valid
-from termucoder.search_replace import apply_changes, ReplaceError
+from termucoder.search_replace import apply_changes, parse_blocks, ReplaceError
+
+MAX_FILE_SIZE = 100_000
 
 
 def read_file(path):
@@ -12,10 +15,18 @@ def read_file(path):
     if not os.path.exists(path):
         raise FileNotFoundError(path)
 
+    size = os.path.getsize(path)
+    if size > MAX_FILE_SIZE:
+        raise ValueError(
+            f"Файл слишком большой ({size} байт). "
+            f"Лимит: {MAX_FILE_SIZE} байт."
+        )
+
     with open(
         path,
         "r",
-        encoding="utf-8"
+        encoding="utf-8",
+        errors="replace"
     ) as f:
         return f.read()
 
@@ -32,7 +43,7 @@ def build_edit_prompt(code, instruction, filename):
 Задача:
 {instruction}
 
-Верни ТОЛЬКО один блок:
+Верни ТОЛЬКО блок(и):
 
 SEARCH
 <точный существующий текст>
@@ -74,7 +85,7 @@ def build_retry_prompt(error, instruction):
 Исправь только SEARCH/REPLACE.
 
 Требования:
-- Верни один блок.
+- Верни блок(и).
 - SEARCH должен отличаться от REPLACE.
 - SEARCH должен существовать в файле.
 - REPLACE должен выполнять исходную задачу:
@@ -87,7 +98,7 @@ def build_retry_prompt(error, instruction):
 
 
 
-def edit_file(path, instruction):
+def edit_file(path, instruction, preview=False):
 
     code = read_file(path)
 
@@ -115,26 +126,29 @@ def edit_file(path, instruction):
 
         else:
 
-            try:
+            blocks = parse_blocks(result)
 
-                apply_changes(
-                    path,
-                    result
-                )
+            if not blocks:
+                last_error = "Нет полезных блоков"
+            else:
+                new_content = code
+                for search, replace in blocks:
+                    new_content = new_content.replace(search, replace, 1)
 
+                diff = create_diff(code, new_content, os.path.basename(path))
 
-                print(
-                    "Изменения применены:"
-                )
-
-                print(result)
-
-                return
-
-
-            except ReplaceError as e:
-
-                last_error = str(e)
+                if not diff:
+                    last_error = "Файл не изменился"
+                elif preview:
+                    print("Предпросмотр изменений:\n")
+                    print(diff)
+                    print("\nФайл не изменён (режим --preview).")
+                    return {"preview": True, "diff": diff}
+                else:
+                    apply_changes(path, result)
+                    print("Изменения применены:\n")
+                    print(diff)
+                    return {"preview": False, "diff": diff}
 
 
         prompt = (
@@ -154,3 +168,20 @@ def edit_file(path, instruction):
     raise Exception(
         f"Не удалось получить корректное изменение: {last_error}"
     )
+
+
+def undo_edit(path):
+    """Восстанавливает файл из .bak резервной копии."""
+    file = os.path.abspath(path)
+    bak = file + ".bak"
+
+    if not os.path.exists(bak):
+        raise FileNotFoundError(
+            f"Резервная копия не найдена: {bak}"
+        )
+
+    import shutil
+    shutil.copy2(bak, file)
+    os.remove(bak)
+
+    print(f"Файл восстановлен из {os.path.basename(bak)}")

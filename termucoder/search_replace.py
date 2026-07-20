@@ -11,7 +11,6 @@ class ReplaceError(Exception):
 def clean_replace(text):
 
     endings = [
-        "END",
         "===== КОНЕЦ =====",
         "===== ФАЙЛ ====="
     ]
@@ -22,6 +21,15 @@ def clean_replace(text):
                 end,
                 1
             )[0]
+
+    # "END" как отдельная строка, не как подстрока в коде.
+    lines = text.split("\n")
+    cleaned = []
+    for line in lines:
+        if line.strip() == "END":
+            break
+        cleaned.append(line)
+    text = "\n".join(cleaned)
 
     return text.strip()
 
@@ -73,7 +81,7 @@ def parse_blocks(response):
 
 
 
-def apply_changes(path, response):
+def apply_changes(path, response, backup=True):
 
     file = Path(path)
 
@@ -84,7 +92,8 @@ def apply_changes(path, response):
 
 
     content = file.read_text(
-        encoding="utf-8"
+        encoding="utf-8",
+        errors="replace"
     )
 
 
@@ -137,6 +146,9 @@ def apply_changes(path, response):
             "Файл не изменился"
         )
 
+    if backup:
+        bak = file.with_suffix(file.suffix + ".bak")
+        bak.write_text(content, encoding="utf-8")
 
     file.write_text(
         result,
@@ -146,5 +158,7 @@ def apply_changes(path, response):
 
     return {
         "blocks": applied,
-        "changed": True
+        "changed": True,
+        "old_content": content,
+        "new_content": result
     }
