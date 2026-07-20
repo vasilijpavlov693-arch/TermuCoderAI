@@ -201,6 +201,10 @@ else
     success "Configuration exists"
 fi
 
+# Create directories
+mkdir -p "$MODELS_DIR"
+success "Models directory: $MODELS_DIR"
+
 # Download model
 if [[ "$SKIP_MODEL" == false ]]; then
     MODEL="$MODELS_DIR/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf"
