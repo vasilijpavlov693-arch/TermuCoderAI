@@ -6,3 +6,6 @@ requires-python = ">=3.11"
 
 [project.scripts]
 termucoder = "termucoder.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["termucoder*"]
