@@ -9,8 +9,9 @@ from termucoder.prompts import SYSTEM
 
 class LLMClient:
 
-    def __init__(self):
+    def __init__(self, registry=None):
 
+        self.registry = registry
         config = load_config()
 
         host = config["server"]["host"]
@@ -95,6 +96,9 @@ class LLMClient:
         result = ""
         finish_reason = None
 
+
+        if self.registry:
+            self.registry.run_hooks("before_ask", messages=messages)
 
         try:
 
@@ -200,6 +204,9 @@ class LLMClient:
 
 
         print()
+
+        if self.registry:
+            self.registry.run_hooks("after_ask", messages=messages, result=result)
 
         return result
 

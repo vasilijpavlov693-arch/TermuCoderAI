@@ -125,32 +125,39 @@ def _coerce(value: str):
 
 
 def set_value(config, key: str, value):
-    """Устанавливает вложенное значение вида ``section.key``.
+    """Устанавливает вложенное значение (произвольная глубина, например a.b.c).
 
     Возвращает изменённый config. Тип значения определяется автоматически.
     """
     parts = key.split(".")
 
-    if len(parts) != 2:
-        raise ValueError("Формат ключа: section.key")
+    if len(parts) < 2:
+        raise ValueError("Формат ключа: section.key[.subkey...]")
 
-    section, name = parts
+    node = config
+    for part in parts[:-1]:
+        if part not in node or not isinstance(node[part], dict):
+            node[part] = {}
+        node = node[part]
 
-    if section not in config or not isinstance(config[section], dict):
-        config[section] = {}
-
-    config[section][name] = _coerce(value)
+    node[parts[-1]] = _coerce(value)
 
     return config
 
 
 def get_value(config, key: str, default=None):
-    """Возвращает вложенное значение вида ``section.key`` или default."""
+    """Возвращает вложенное значение (произвольная глубина) или default."""
     parts = key.split(".")
 
-    if len(parts) != 2:
-        raise ValueError("Формат ключа: section.key")
+    if len(parts) < 2:
+        raise ValueError("Формат ключа: section.key[.subkey...]")
 
-    section, name = parts
+    node = config
+    for part in parts:
+        if not isinstance(node, dict):
+            return default
+        node = node.get(part)
+        if node is None:
+            return default
 
-    return config.get(section, {}).get(name, default)
+    return node

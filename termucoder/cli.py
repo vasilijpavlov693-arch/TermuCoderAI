@@ -19,6 +19,8 @@ import sys
 from termucoder import history as history_mod
 from termucoder import context as context_mod
 from termucoder import memory as memory_mod
+from termucoder.plugins import PluginRegistry
+from termucoder.plugins.loader import load_plugins
 from termucoder.api import LLMClient
 from termucoder.config import (
     load_config,
@@ -346,6 +348,46 @@ def edit_command(args):
         print(error(str(e)))
 
 
+
+def plugin_command(args):
+    """Управление плагинами: list / info."""
+    if not args:
+        print("\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0438\u043e:\n  termucoder plugin list\n  termucoder plugin info")
+        return
+
+    action = args[0]
+
+    if action == "list":
+        registry = PluginRegistry()
+        loaded = load_plugins(registry)
+        if not loaded:
+            print(note("Плагины не найдены"))
+            return
+        print(header(f"Загружено плагинов: {len(loaded)}"))
+        print()
+        for p in loaded:
+            print(f"  {p['name']} v{p['version']}")
+            if p.get('description'):
+                print(f"    {p['description']}")
+        return
+
+    if action == "info":
+        print(header("Плагины:"))
+        print()
+        print("Директории поиска:")
+        from termucoder.plugins.loader import PLUGIN_DIRS
+        for d in PLUGIN_DIRS:
+            exists = "✓" if __import__("os").path.isdir(d) else "✗"
+            print(f"  {exists} {d}")
+        print()
+        print("Создай плагин:")
+        print("  ~/.termucoder/plugins/my_plugin/__init__.py")
+        print("  def register(registry):")
+        print("      registry.add_command(...)")
+        return
+
+    print(error(f"Неизвестная команда plugin: {action}"))
+
 def ask_command(args):
     """Одиночный вопрос модели."""
     prompt = " ".join(args)
@@ -453,6 +495,7 @@ COMMANDS_HELP = [
     ("edit <файл>",            "AI правка файла (--preview, --undo)"),
     ("chat",                   "Интерактивный чат (--new, --list, --session, --delete)"),
     ("memory <команда>",      "Память проекта (add/list/search/delete/context)"),
+    ("plugin <команда>",      "Плагины (list/info)"),
     ("config",                 "Показать настройки (show/set/init)"),
     ("server <команда>",      "Управление llama-server (start/stop/restart/status)"),
     ("model <команда>",       "Управление моделями (list/info/use)"),
@@ -507,6 +550,7 @@ def main():
         "server": server_command,
         "model": model_command,
         "memory": memory_command,
+        "plugin": plugin_command,
         "setup": lambda a: setup("--full" in a, "--start" in a),
         "doctor": lambda a: doctor(),
         "analyze": analyze_command,
