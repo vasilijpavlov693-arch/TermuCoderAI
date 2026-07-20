@@ -23,6 +23,7 @@ DEFAULT_IGNORE_DIRS = {
     "build",
     "dist",
     ".termucoder",
+    ".mimocode",
     "cache",
     ".mypy_cache",
     ".pytest_cache",
