@@ -56,6 +56,59 @@ def muted(text: str) -> str:
     return _paint(DIM, text)
 
 
+def success(text: str) -> str:
+    return _paint(GREEN, "\u2714 " + text)
+
+
+def info(text: str) -> str:
+    return _paint(CYAN, "\u2139 " + text)
+
+
+def code(text: str) -> str:
+    return _paint(YELLOW, text)
+
+
+def bold(text: str) -> str:
+    return _paint(BOLD, text)
+
+
+def dim(text: str) -> str:
+    return _paint(DIM, text)
+
+
+def separator() -> str:
+    if supports_color():
+        return f"{DIM}{'─' * 50}{RESET}"
+    return "─" * 50
+
+
+def table(headers: "list[str]", rows: "list[list[str]]") -> str:
+    """Форматирует таблицу с заголовками и строками."""
+    if not rows:
+        return ""
+
+    widths = [len(h) for h in headers]
+    for row in rows:
+        for i, cell in enumerate(row):
+            if i < len(widths):
+                widths[i] = max(widths[i], len(cell))
+
+    def fmt_row(cells):
+        parts = []
+        for i, cell in enumerate(cells):
+            w = widths[i] if i < len(widths) else len(cell)
+            parts.append(cell.ljust(w))
+        return "  ".join(parts)
+
+    lines = []
+    lines.append(bold(fmt_row(headers)))
+    lines.append(separator())
+    for row in rows:
+        lines.append(fmt_row(row))
+
+    return "\n".join(lines)
+
+
 # ---------------------------------------------------------------------------
 # Работа с .gitignore
 # ---------------------------------------------------------------------------

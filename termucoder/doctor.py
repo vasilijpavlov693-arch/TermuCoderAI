@@ -4,16 +4,17 @@ import subprocess
 import urllib.request
 
 from termucoder.config import load_config, CONFIG_FILE
+from termucoder.utils import success, error, header, muted
 
 def check_settings():
 
     if os.path.exists(CONFIG_FILE):
 
-        print("✓ settings.json")
+        print(success("settings.json"))
 
         return True
 
-    print("✗ settings.json отсутствует")
+    print(error("settings.json отсутствует"))
 
     return False
 
@@ -39,10 +40,7 @@ def check_model():
 
     if os.path.exists(path):
 
-        print(
-            "✓ Модель:",
-            os.path.basename(path)
-        )
+        print(success(f"Модель: {os.path.basename(path)}"))
 
         return True
 
@@ -166,9 +164,7 @@ def check_api():
 def doctor():
 
     print()
-    print(
-        "🩺 TermuCoderAI doctor"
-    )
+    print(header("TermuCoderAI doctor"))
     print()
 
 

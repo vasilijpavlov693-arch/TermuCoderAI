@@ -2,6 +2,8 @@
 
 import os
 
+from termucoder.utils import header, success, muted
+
 
 VERSION_FILE = "VERSION"
 
@@ -28,8 +30,8 @@ FEATURES = [
 
 
 def show_version():
-    print(f"TermuCoderAI {get_version()}")
+    print(header(f"TermuCoderAI {get_version()}"))
     print()
 
     for feature in FEATURES:
-        print(f"  ✓ {feature}")
+        print(f"  {success(feature)}")

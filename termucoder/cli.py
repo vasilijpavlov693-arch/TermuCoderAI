@@ -45,6 +45,7 @@ from termucoder.model import (
 )
 from termucoder.utils import ok, error, warning, note, header, muted
 from termucoder.editor import edit_file
+from termucoder.completer import setup_completion
 
 
 # ---------------------------------------------------------------------------
@@ -508,19 +509,53 @@ COMMANDS_HELP = [
 
 
 def print_help():
+    from termucoder.utils import bold, dim, separator, success, info
+
     print(header(f"TermuCoderAI {get_version()}"))
+    print(dim("  Локальный AI-ассистент для разработчика"))
     print()
-    print("Использование: termucoder <команда> [аргументы]")
+    print(f"  {bold('Использование:')} termucoder <команда> [аргументы]")
     print()
-    print("Команды:")
-    for name, desc in COMMANDS_HELP:
-        print(f"  {name:<22} {desc}")
+
+    # Основные команды
+    print(f"  {bold('Основные команды:')}")
+    for name, desc in [
+        ("ask <текст>", "Задать модели вопрос"),
+        ("chat", "Интерактивный чат"),
+        ("edit <файл>", "AI-правка файла"),
+        ("memory", "Память проекта"),
+    ]:
+        print(f"    {success(name):<30} {dim(desc)}")
     print()
-    print("Примеры:")
-    print("  termucoder ask \"объясни этот код\"")
-    print("  termucoder chat")
-    print("  termucoder config set generation.temperature 0.4")
-    print("  termucoder analyze . --ask \"что делает этот проект?\"")
+
+    # Сервер и модель
+    print(f"  {bold('Сервер и модель:')}")
+    for name, desc in [
+        ("server <cmd>", "Управление llama-server"),
+        ("model <cmd>", "Управление моделями"),
+    ]:
+        print(f"    {info(name):<30} {dim(desc)}")
+    print()
+
+    # Инструменты
+    print(f"  {bold('Инструменты:')}")
+    for name, desc in [
+        ("analyze <путь>", "Анализ проекта"),
+        ("config", "Настройки"),
+        ("plugin", "Плагины"),
+        ("setup", "Настройка окружения"),
+        ("doctor", "Диагностика"),
+    ]:
+        print(f"    {info(name):<30} {dim(desc)}")
+    print()
+
+    print(separator())
+    print(dim("  Примеры:"))
+    print(f"    termucoder ask \"объясни этот код\"")
+    print(f"    termucoder chat")
+    print(f"    termucoder edit script.py \"добавь docstring\"")
+    print(f"    termucoder memory add \"API использует REST\" --tags api")
+    print(f"    termucoder analyze . --ask \"что делает проект?\"")
 
 
 # ---------------------------------------------------------------------------
@@ -528,6 +563,7 @@ def print_help():
 # ---------------------------------------------------------------------------
 
 def main():
+    setup_completion()
     argv = sys.argv[1:]
 
     # Глобальные флаги.
