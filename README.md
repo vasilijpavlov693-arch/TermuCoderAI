@@ -137,11 +137,15 @@ termucoder edit --undo script.py
 ```bash
 termucoder memory add "API использует REST v2" --tags "api,rest"
 termucoder memory list
-termucoder memory search "API"
+termucoder memory search "API"          # TF-IDF ранжирование
+termucoder memory tags                  # список тегов с количеством
 termucoder memory delete <id>
 termucoder memory context
+termucoder memory export file.json      # экспорт всех записей
+termucoder memory import file.json      # импорт записей
 ```
 
+Поиск использует TF-IDF ранжирование для релевантных результатов.
 Знания автоматически подставляются в контекст AI при анализе проекта.
 
 ### analyze — анализ проекта
@@ -239,7 +243,7 @@ TermuCoderAI/
 │   ├── utils.py          Общие helper-функции
 │   └── version.py        Номер версии
 ├── installers/           Скрипты установки
-├── tests/                Юнит-тесты (110 тестов)
+├── tests/                Юнит-тесты (129 тестов)
 ├── settings.example.json Пример конфигурации
 ├── VERSION
 ├── pyproject.toml

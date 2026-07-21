@@ -521,6 +521,16 @@ def memory_command(args):
         print(ok(f"Импортировано {n} записей из {args[1]}"))
         return
 
+    if action == "context":
+        ctx = memory_mod.get_context()
+        if not ctx:
+            print(note("Память пуста"))
+            return
+        print(header("Контекст для AI:"))
+        print()
+        print(ctx)
+        return
+
     print(error(f"Неизвестная команда memory: {action}"))
 
 
