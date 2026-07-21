@@ -55,6 +55,11 @@ DEFAULT_CONFIG = {
         "max_entries": 100,
         "auto_learn": True,
         "context_limit": 10
+    },
+
+    "agent": {
+        "max_iterations": 10,
+        "auto_approve": False
     }
 }
 

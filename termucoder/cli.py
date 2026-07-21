@@ -47,6 +47,7 @@ from termucoder.utils import ok, error, warning, note, header, muted
 from termucoder.editor import edit_file
 from termucoder.completer import setup_completion
 from termucoder.tokens import count_tokens, fit_messages_to_context, summarize_messages
+from termucoder.agent.loop import run_agent as _run_agent
 
 
 # ---------------------------------------------------------------------------
@@ -588,6 +589,7 @@ def print_help():
     print(f"  {bold('Инструменты:')}")
     for name, desc in [
         ("analyze <путь>", "Анализ проекта"),
+        ("agent task", "Autonomous agent"),
         ("config", "Настройки"),
         ("plugin", "Плагины"),
         ("setup", "Настройка окружения"),
@@ -608,6 +610,34 @@ def print_help():
 # ---------------------------------------------------------------------------
 # Точка входа
 # ---------------------------------------------------------------------------
+
+
+
+
+def agent_command(args):
+    """Autonomous agent command."""
+    flags = set(args)
+    rest = [a for a in args if not a.startswith("--")]
+
+    if not rest:
+        print("Usage:")
+        print("  termucoder agent task")
+        print("  termucoder agent --auto task")
+        print("  termucoder agent --steps N task")
+        return
+
+    task = " ".join(rest)
+    auto = "--auto" in flags
+    max_iter = 10
+    if "--steps" in flags:
+        idx = args.index("--steps")
+        if idx + 1 < len(args):
+            try:
+                max_iter = int(args[idx + 1])
+            except ValueError:
+                pass
+
+    _run_agent(task, max_iterations=max_iter, auto_approve=auto)
 
 def main():
     setup_completion()
@@ -642,6 +672,7 @@ def main():
         "setup": lambda a: setup("--full" in a, "--start" in a),
         "doctor": lambda a: doctor(),
         "analyze": analyze_command,
+        "agent": agent_command,
     }
 
     # Register plugin commands

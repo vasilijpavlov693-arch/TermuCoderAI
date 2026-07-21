@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.0-green" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.4.0-green" alt="Version">
   <img src="https://img.shields.io/badge/python-3.11+-3776AB?logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-yellow" alt="License">
   <img src="https://img.shields.io/badge/platforms-Windows%20%7C%20Linux%20%7C%20Termux-lightgrey" alt="Platforms">
@@ -243,7 +243,7 @@ TermuCoderAI/
 │   ├── utils.py          Общие helper-функции
 │   └── version.py        Номер версии
 ├── installers/           Скрипты установки
-├── tests/                Юнит-тесты (129 тестов)
+├── tests/                Юнит-тесты (144 теста)
 ├── settings.example.json Пример конфигурации
 ├── VERSION
 ├── pyproject.toml
@@ -263,8 +263,8 @@ TermuCoderAI/
 | v1.2   | ✅ Done | Управление контекстом (токены, суммаризация)         |
 | v1.2   | 🔜     | Управление контекстом (токены, суммаризация) |
 | v1.3   | ✅ Done | Улучшенная память и поиск (RAG-lite)          |
-| v1.4   | 🔝     | Инструменты агента (Tool system)              |
-| v2.0   | 📋     | Agent Mode — автономный кодирующий агент      |
+| v1.4   | ✅ Done | Инструменты агента (Tool system)              |
+| v2.0   | 🔝     | Agent Mode — автономный кодирующий агент      |
 
 ## Лицензия
 
