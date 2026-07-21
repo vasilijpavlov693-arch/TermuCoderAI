@@ -156,7 +156,7 @@ fi
 
 # Install Python package
 info "Installing termucoder-ai..."
-$PYTHON -m pip install -e . -q 2>/dev/null || $PYTHON -m pip install -r requirements.txt -q 2>/dev/null
+$PYTHON -m pip install . -q 2>/dev/null || $PYTHON -m pip install -r requirements.txt -q 2>/dev/null
 success "Package installed"
 
 # Create settings.json if missing

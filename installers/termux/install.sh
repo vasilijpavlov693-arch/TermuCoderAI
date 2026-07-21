@@ -20,7 +20,7 @@ pip install --upgrade pip
 
 pip install -r requirements.txt
 
-pip install -e .
+pip install .
 
 
 echo "[2/5] Preparing directories..."

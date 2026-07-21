@@ -17,7 +17,7 @@ wget
 
 
 python3 -m pip install -r requirements.txt
-python3 -m pip install -e .
+python3 -m pip install .
 
 
 mkdir -p ~/AI/models

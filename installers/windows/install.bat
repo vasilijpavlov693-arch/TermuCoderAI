@@ -20,7 +20,7 @@ echo Installing dependencies...
 
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-python -m pip install -e .
+python -m pip install .
 
 if not exist models mkdir models
 if not exist AI mkdir AI
