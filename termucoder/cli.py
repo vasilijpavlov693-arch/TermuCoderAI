@@ -46,6 +46,7 @@ from termucoder.model import (
 from termucoder.utils import ok, error, warning, note, header, muted
 from termucoder.editor import edit_file
 from termucoder.completer import setup_completion
+from termucoder.tokens import count_tokens, fit_messages_to_context, summarize_messages
 
 
 # ---------------------------------------------------------------------------
@@ -267,7 +268,26 @@ def chat_command(args):
                 continue
 
             messages.append({"role": "user", "content": line})
-            reply = client.chat(messages)
+
+            # Context management: trim history to fit model's context window
+            from termucoder.config import load_config as _cfg
+            _c = _cfg()
+            _ctx_size = _c.get("server", {}).get("context", 4096)
+            _max_resp = _c.get("generation", {}).get("max_tokens", 512)
+            _sys_tokens = count_tokens(_c.get("prompts", {}).get("system", ""))
+
+            # If messages exceed 80% of available context, summarize old ones
+            _total = count_tokens(str(messages))
+            _available = _ctx_size - _max_resp - _sys_tokens
+            if _total > _available * 0.8:
+                messages = summarize_messages(messages, keep_recent=6)
+
+            # Final trim to fit
+            _trimmed = fit_messages_to_context(messages, _ctx_size, _max_resp, _sys_tokens)
+            if len(_trimmed) < len(messages):
+                print(muted(f"[контекст: {len(_trimmed)}/{len(messages)} сообщений]"))
+
+            reply = client.chat(_trimmed)
             messages.append({"role": "assistant", "content": reply})
             print("\n")
             history_mod.save_session(session_id, messages)

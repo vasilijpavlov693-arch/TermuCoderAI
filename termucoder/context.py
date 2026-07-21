@@ -63,10 +63,36 @@ def read_docs(root, files):
     return "\n\n".join(blocks)
 
 
-def analyze_project(root=".", max_file_chars=4000, max_files=40):
+def _get_context_limits():
+    """Calculate dynamic limits based on model's context window."""
+    from termucoder.config import load_config
+    cfg = load_config()
+    context = cfg.get("server", {}).get("context", 4096)
+    max_tokens = cfg.get("generation", {}).get("max_tokens", 512)
+
+    # Reserve ~30% for system prompt + memory, ~15% for response
+    available = int(context * 0.55)
+
+    # Each file gets roughly: available / (estimated_files * avg_chars_per_token)
+    # Assume ~30 files average, ~4 chars per token
+    max_files = min(60, max(10, available // 500))
+    max_file_chars = min(8000, max(1000, available // max_files * 4))
+
+    return max_files, max_file_chars
+
+
+def analyze_project(root=".", max_file_chars=None, max_files=None):
     files = scan_project(root)
     structure = build_structure(root, files)
     docs = read_docs(root, files)
+
+    # Use dynamic limits if not specified
+    if max_files is None or max_file_chars is None:
+        dyn_files, dyn_chars = _get_context_limits()
+        if max_files is None:
+            max_files = dyn_files
+        if max_file_chars is None:
+            max_file_chars = dyn_chars
 
     sorted_files = sorted(files, key=_sort_key)
 
@@ -102,7 +128,7 @@ def analyze_project(root=".", max_file_chars=4000, max_files=40):
     }
 
 
-def build_prompt(root="."):
+def build_prompt(root=".", question=None):
     from termucoder import memory as memory_mod
     from termucoder.config import load_config
 
