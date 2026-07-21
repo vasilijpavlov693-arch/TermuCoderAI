@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.7.0-green" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.1.0-green" alt="Version">
   <img src="https://img.shields.io/badge/python-3.11+-3776AB?logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-yellow" alt="License">
   <img src="https://img.shields.io/badge/platforms-Windows%20%7C%20Linux%20%7C%20Termux-lightgrey" alt="Platforms">

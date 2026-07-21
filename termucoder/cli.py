@@ -242,7 +242,7 @@ def chat_command(args):
     print(muted("Вводи сообщения. /exit — выход, /clear — очистить историю."))
     print()
 
-    client = LLMClient()
+    client = LLMClient(registry=registry)
 
     try:
         while True:
@@ -397,7 +397,7 @@ def ask_command(args):
         print(error("Укажи текст запроса: termucoder ask \"... \""))
         return
 
-    client = LLMClient()
+    client = LLMClient(registry=registry)
     client.ask(prompt)
     print()
 
@@ -564,6 +564,11 @@ def print_help():
 
 def main():
     setup_completion()
+
+    # Load plugins
+    registry = PluginRegistry()
+    load_plugins(registry)
+
     argv = sys.argv[1:]
 
     # Глобальные флаги.
@@ -591,6 +596,11 @@ def main():
         "doctor": lambda a: doctor(),
         "analyze": analyze_command,
     }
+
+    # Register plugin commands
+    for name, handler in registry.get_commands().items():
+        if name not in handlers:
+            handlers[name] = handler
 
     handler = handlers.get(command)
 

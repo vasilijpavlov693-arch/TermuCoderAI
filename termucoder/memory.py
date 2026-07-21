@@ -12,7 +12,6 @@
 import json
 import os
 import time
-import random
 
 
 MEMORY_DIR = os.path.join(".termucoder", "memory")

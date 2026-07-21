@@ -39,6 +39,14 @@ class PluginRegistry:
         """Возвращает шаблон промпта по имени или None."""
         return self.prompts.get(name)
 
+    def get_commands(self):
+        """Возвращает словарь {name: handler}."""
+        return {name: info["handler"] for name, info in self.commands.items()}
+
+    def get_help_texts(self):
+        """Возвращает словарь {name: help_text}."""
+        return {name: info["help"] for name, info in self.commands.items()}
+
     def run_hooks(self, event, *args, **kwargs):
         """Вызывает все callbacks для события."""
         for cb in self.hooks.get(event, []):

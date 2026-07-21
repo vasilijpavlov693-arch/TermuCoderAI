@@ -1,8 +1,11 @@
 [project]
 name = "termucoder-ai"
-version = "1.0.0"
-description = "Local AI coding assistant for Termux"
+version = "1.1.0"
+description = "Local AI coding assistant"
 requires-python = ">=3.11"
+dependencies = [
+    "requests",
+]
 
 [project.scripts]
 termucoder = "termucoder.cli:main"

@@ -1,198 +1,71 @@
+"""Диагностика системы TermuCoderAI."""
+
 import os
-import json
-import subprocess
-import urllib.request
+import sys
 
-from termucoder.config import load_config, CONFIG_FILE
-from termucoder.utils import success, error, header, muted
-
-def check_settings():
-
-    if os.path.exists(CONFIG_FILE):
-
-        print(success("settings.json"))
-
-        return True
-
-    print(error("settings.json отсутствует"))
-
-    return False
-
-
-
-def check_model():
-
-    cfg = load_config()
-
-    path = cfg.get(
-        "model",
-        {}
-    ).get(
-        "path",
-        ""
-    )
-
-
-    path = os.path.expanduser(
-        path
-    )
-
-
-    if os.path.exists(path):
-
-        print(success(f"Модель: {os.path.basename(path)}"))
-
-        return True
-
-
-    print(
-        "✗ Модель не найдена:",
-        path
-    )
-
-    return False
-
-
-
-def check_llama():
-
-    cfg = load_config()
-
-    path = os.path.expanduser(
-        "~/AI/llama.cpp/build/bin/llama-server"
-    )
-
-
-    if os.path.exists(path):
-
-        print(
-            "✓ llama-server"
-        )
-
-        return True
-
-
-    print(
-        "✗ llama-server не найден"
-    )
-
-    return False
-
-
-
-def check_python():
-
-    try:
-
-        version = subprocess.check_output(
-            [
-                "python",
-                "--version"
-            ],
-            text=True
-        )
-
-
-        print(
-            "✓",
-            version.strip()
-        )
-
-        return True
-
-
-    except:
-
-        print(
-            "✗ Python"
-        )
-
-        return False
-
-
-
-def check_api():
-
-    cfg = load_config()
-
-    host = cfg.get(
-        "server",
-        {}
-    ).get(
-        "host",
-        "127.0.0.1"
-    )
-
-    port = cfg.get(
-        "server",
-        {}
-    ).get(
-        "port",
-        8080
-    )
-
-
-    url = (
-        f"http://{host}:{port}/health"
-    )
-
-
-    try:
-
-        urllib.request.urlopen(
-            url,
-            timeout=3
-        )
-
-        print(
-            "✓ llama-server API"
-        )
-
-        return True
-
-
-    except:
-
-        print(
-            "✗ llama-server API недоступен"
-        )
-
-        return False
-
+from termucoder.config import load_config
+from termucoder.server import _find_llama_server
 
 
 def doctor():
+    """Проверка состояния системы."""
+    issues = []
+    ok_count = 0
 
-    print()
-    print(header("TermuCoderAI doctor"))
-    print()
-
-
-    checks = [
-
-        check_settings(),
-
-        check_python(),
-
-        check_llama(),
-
-        check_model(),
-
-        check_api()
-
-    ]
-
-
-    print()
-
-    if all(checks):
-
-        print(
-            "✅ Система готова"
-        )
-
+    if os.path.exists("settings.json"):
+        print("  [OK] settings.json")
+        ok_count += 1
     else:
+        print("  [ERR] settings.json отсутствует")
+        issues.append("settings.json")
 
-        print(
-            "⚠ Найдены проблемы"
-        )
+    ver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    print(f"  [OK] Python {ver}")
+    ok_count += 1
+
+    binary = _find_llama_server()
+    if binary:
+        print(f"  [OK] llama-server: {binary}")
+        ok_count += 1
+    else:
+        print("  [ERR] llama-server не найден")
+        issues.append("llama-server")
+
+    cfg = load_config()
+    model_path = os.path.expanduser(cfg.get("model", {}).get("path", ""))
+    if model_path and os.path.exists(model_path):
+        size_mb = os.path.getsize(model_path) / (1024 * 1024)
+        print(f"  [OK] Модель: {os.path.basename(model_path)} ({size_mb:.0f} MB)")
+        ok_count += 1
+    else:
+        name = cfg.get("model", {}).get("name", "?")
+        print(f"  [ERR] Модель не найдена: {name}")
+        issues.append("model")
+
+    if not issues or "llama-server" not in issues:
+        try:
+            import requests
+            host = cfg.get("server", {}).get("host", "127.0.0.1")
+            port = cfg.get("server", {}).get("port", 8080)
+            r = requests.get(f"http://{host}:{port}/health", timeout=3)
+            if r.status_code == 200:
+                print("  [OK] llama-server API доступен")
+                ok_count += 1
+            else:
+                print(f"  [WARN] llama-server API вернул {r.status_code}")
+        except Exception:
+            print("  [WARN] llama-server API недоступен")
+    else:
+        print("  [WARN] llama-server API недоступен")
+
+    print()
+    if issues:
+        print(f"  Найдены проблемы: {', '.join(issues)}")
+    else:
+        print(f"  Все проверки пройдены ({ok_count}/{ok_count})")
+
+    return len(issues) == 0
+
+
+if __name__ == "__main__":
+    doctor()
