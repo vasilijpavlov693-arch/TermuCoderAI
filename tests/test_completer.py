@@ -43,9 +43,15 @@ class TestCompleter(unittest.TestCase):
         self.assertEqual(_get_command([]), None)
 
     def test_complete_path(self):
-        matches = _complete_path("termucoder/")
-        self.assertIn("cli.py", matches)
-        self.assertIn("api.py", matches)
+        import tempfile, os
+        tmp = tempfile.mkdtemp()
+        os.makedirs(os.path.join(tmp, "subdir"))
+        with open(os.path.join(tmp, "subdir", "hello.py"), "w") as f:
+            f.write("")
+        matches = _complete_path(os.path.join(tmp, "subdir") + os.sep)
+        self.assertIn("hello.py", matches)
+        import shutil
+        shutil.rmtree(tmp)
 
     def test_complete_path_empty(self):
         matches = _complete_path("")
