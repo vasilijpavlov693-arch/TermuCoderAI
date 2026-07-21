@@ -150,7 +150,7 @@ def build_prompt(root=".", question=None):
     mem_cfg = cfg.get("memory", {})
     if mem_cfg.get("enabled", True):
         limit = mem_cfg.get("context_limit", 10)
-        knowledge = memory_mod.get_context(max_entries=limit)
+        knowledge = memory_mod.get_context(max_entries=limit, query=question)
         if knowledge:
             parts.append("\n\u0421\u043e\u0445\u0440\u0430\u043d\u0451\u043d\u043d\u044b\u0435 \u0437\u043d\u0430\u043d\u0438\u044f \u043e \u043f\u0440\u043e\u0435\u043a\u0442\u0435:")
             parts.append(knowledge)

@@ -494,14 +494,31 @@ def memory_command(args):
             print(error("Запись не найдена"))
         return
 
-    if action == "context":
-        ctx = memory_mod.get_context()
-        if not ctx:
-            print(note("Память пуста"))
+    if action == "tags":
+        tags = memory_mod.get_all_tags()
+        if not tags:
+            print(note("Тегов нет"))
             return
-        print(header("Контекст для AI:"))
+        print(header("Теги:"))
         print()
-        print(ctx)
+        for tag, count in tags.items():
+            print(f"  {tag}: {count}")
+        return
+
+    if action == "export":
+        if len(args) < 2:
+            print(error("Укажи файл: termucoder memory export file.json"))
+            return
+        n = memory_mod.export_all(args[1])
+        print(ok(f"Экспортировано {n} записей в {args[1]}"))
+        return
+
+    if action == "import":
+        if len(args) < 2:
+            print(error("Укажи файл: termucoder memory import file.json"))
+            return
+        n = memory_mod.import_all(args[1])
+        print(ok(f"Импортировано {n} записей из {args[1]}"))
         return
 
     print(error(f"Неизвестная команда memory: {action}"))
