@@ -190,6 +190,157 @@ termucoder plugin info   # информация о плагинах
 
 Плагины хранятся в `~/.termucoder/plugins/` (глобальные) и `.termucoder/plugins/` (проектные).
 
+### agent — автономный агент
+
+
+  Agent: создай функцию sort
+  Tools: 5
+  Max steps: 10
+
+  --- Step 1/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 2/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 3/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 4/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 5/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 6/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 7/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 8/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 9/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 10/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+
+  Limit reached (10)
+
+  Agent: задача
+  Tools: 5
+  Max steps: 10
+
+  --- Step 1/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 2/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 3/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 4/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 5/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 6/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 7/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 8/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 9/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 10/10 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+
+  Limit reached (10)
+
+  Agent: 5 задача
+  Tools: 5
+  Max steps: 5
+
+  --- Step 1/5 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 2/5 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 3/5 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 4/5 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+  --- Step 5/5 ---
+
+❌ AI сервер недоступен
+
+  Unrecognized: 
+
+  Limit reached (5)
+
+Агент планирует и выполняет многошаговые задачи: читает код, правит файлы, запускает команды.
+
 ### setup — настройка окружения
 
 ```bash

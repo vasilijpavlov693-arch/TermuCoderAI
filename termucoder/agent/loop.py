@@ -20,7 +20,7 @@ def run_agent(task, max_iterations=10, auto_approve=False):
     print()
     for iteration in range(1, max_iterations + 1):
         print('  --- Step %d/%d ---' % (iteration, max_iterations))
-        history_text = NL.join(history[-10:]) if history else '(no actions yet)'
+        history_text = chr(10).join(history[-10:]) if history else '(no actions yet)'
         user_prompt = TASK_PROMPT.format(task=task, context=context, history=history_text)
         messages = [{'role': 'system', 'content': system_prompt}, {'role': 'user', 'content': user_prompt}]
         response = llm.chat(messages)
