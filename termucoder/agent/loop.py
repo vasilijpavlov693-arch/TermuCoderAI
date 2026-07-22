@@ -73,6 +73,12 @@ def run_agent(task, max_iterations=10, auto_approve=False, resume=None):
             history.append("[Step %d] JSON error" % iteration)
             continue
 
+        # Handle direct tool call format (action = tool name)
+        tool_names = ["read_file", "write_file", "search_code", "run_command", "list_files"]
+        if action.get("action") in tool_names:
+            action["tool"] = action["action"]
+            action["action"] = "tool_call"
+
         # Done
         if action.get("action") == "done":
             result = action.get("result", "Done")
