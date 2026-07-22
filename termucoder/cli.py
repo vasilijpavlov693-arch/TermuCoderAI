@@ -244,7 +244,7 @@ def chat_command(args):
     print(muted("Вводи сообщения. /exit — выход, /clear — очистить историю."))
     print()
 
-    client = LLMClient(registry=registry)
+    client = LLMClient()
 
     try:
         while True:
@@ -418,7 +418,7 @@ def ask_command(args):
         print(error("Укажи текст запроса: termucoder ask \"... \""))
         return
 
-    client = LLMClient(registry=registry)
+    client = LLMClient()
     client.ask(prompt)
     print()
 

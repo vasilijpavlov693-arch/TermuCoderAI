@@ -28,14 +28,21 @@ def run_agent(task, max_iterations=10, auto_approve=False):
             json_start = response.find('{')
             json_end = response.rfind('}') + 1
             if json_start >= 0 and json_end > json_start:
-                action = json.loads(response[json_start:json_end])
+                json_str = response[json_start:json_end]
+                try:
+                    action = json.loads(json_str)
+                except json.JSONDecodeError:
+                    # Try to fix truncated JSON
+                    print('  JSON parse error, raw:', json_str[:300])
+                    history.append('[Step %d] JSON error' % iteration)
+                    continue
             else:
                 print('  Unrecognized:', response[:200])
                 history.append('[Step %d] Unrecognized' % iteration)
                 continue
-        except json.JSONDecodeError:
-            print('  JSON error:', response[:200])
-            history.append('[Step %d] JSON error' % iteration)
+        except Exception as e:
+            print('  Error:', str(e)[:200])
+            history.append('[Step %d] Error: %s' % (iteration, str(e)[:100]))
             continue
         if action.get('action') == 'done':
             result = action.get('result', 'Done')
