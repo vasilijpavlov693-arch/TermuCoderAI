@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.4.0-green" alt="Version">
+  <img src="https://img.shields.io/badge/version-2.0.0-green" alt="Version">
   <img src="https://img.shields.io/badge/python-3.11+-3776AB?logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-yellow" alt="License">
   <img src="https://img.shields.io/badge/platforms-Windows%20%7C%20Linux%20%7C%20Termux-lightgrey" alt="Platforms">
@@ -383,6 +383,19 @@ TermuCoderAI/
 │   ├── memory.py         Память проектов (знания)
 │   ├── search.py         Сканирование файлов проекта
 │   ├── context.py        Анализ проекта и контекст для AI
+│   ├── agent/
+│   │   ├── __init__.py   Agent Mode
+│   │   ├── loop.py       Основной цикл агента
+│   │   ├── prompts.py    Промпты для агента
+│   │   ├── history.py    Лог действий
+│   │   └── checkpoint.py Автосохранение
+│   ├── tools/
+│   │   ├── __init__.py   Tool registry
+│   │   ├── read_file.py  Чтение файлов
+│   │   ├── write_file.py Запись файлов
+│   │   ├── search_code.py Поиск по коду
+│   │   ├── run_command.py Запуск команд
+│   │   └── list_files.py Список файлов
 │   ├── server.py         Управление llama-server
 │   ├── model.py          Управление моделями
 │   ├── plugins/          Система плагинов
@@ -394,7 +407,7 @@ TermuCoderAI/
 │   ├── utils.py          Общие helper-функции
 │   └── version.py        Номер версии
 ├── installers/           Скрипты установки
-├── tests/                Юнит-тесты (144 теста)
+├── tests/                Юнит-тесты (155 тестов)
 ├── settings.example.json Пример конфигурации
 ├── VERSION
 ├── pyproject.toml
@@ -415,7 +428,7 @@ TermuCoderAI/
 | v1.2   | 🔜     | Управление контекстом (токены, суммаризация) |
 | v1.3   | ✅ Done | Улучшенная память и поиск (RAG-lite)          |
 | v1.4   | ✅ Done | Инструменты агента (Tool system)              |
-| v2.0   | 🔝     | Agent Mode — автономный кодирующий агент      |
+| v2.0   | ✅ Done | Agent Mode — автономный кодирующий агент      |
 
 ## Лицензия
 

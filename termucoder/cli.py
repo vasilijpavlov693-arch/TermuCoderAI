@@ -48,6 +48,8 @@ from termucoder.editor import edit_file
 from termucoder.completer import setup_completion
 from termucoder.tokens import count_tokens, fit_messages_to_context, summarize_messages
 from termucoder.agent.loop import run_agent as _run_agent
+from termucoder.agent.history import list_sessions as _list_sessions, format_session as _format_session
+from termucoder.agent.checkpoint import list_checkpoints as _list_checkpoints
 
 
 # ---------------------------------------------------------------------------
@@ -619,11 +621,34 @@ def agent_command(args):
     flags = set(args)
     rest = [a for a in args if not a.startswith("--")]
 
+    if "--history" in flags:
+        sessions = _list_sessions()
+        if not sessions:
+            print("No agent sessions found")
+            return
+        print("Agent sessions:")
+        for s in sessions:
+            print("  -", s)
+        return
+
+    if "--checkpoints" in flags:
+        cps = _list_checkpoints()
+        if not cps:
+            print("No checkpoints found")
+            return
+        print("Checkpoints:")
+        for c in cps:
+            print("  -", c)
+        return
+
     if not rest:
         print("Usage:")
         print("  termucoder agent task")
         print("  termucoder agent --auto task")
         print("  termucoder agent --steps N task")
+        print("  termucoder agent --resume SESSION_ID")
+        print("  termucoder agent --history")
+        print("  termucoder agent --checkpoints")
         return
 
     task = " ".join(rest)

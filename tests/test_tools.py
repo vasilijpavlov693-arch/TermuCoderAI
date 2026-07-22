@@ -41,13 +41,13 @@ class TestReadFile(unittest.TestCase):
         from termucoder.tools import create_default_registry
         r = create_default_registry()
         result = r.execute("read_file", path="VERSION")
-        self.assertIn("1.3.0", result)
+        self.assertIn("1.4.0", result)
 
     def test_read_file_range(self):
         from termucoder.tools import create_default_registry
         r = create_default_registry()
         result = r.execute("read_file", path="VERSION", start_line=1, end_line=1)
-        self.assertIn("1.3.0", result)
+        self.assertIn("1.4.0", result)
 
     def test_read_file_not_found(self):
         from termucoder.tools import create_default_registry
